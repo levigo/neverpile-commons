@@ -21,6 +21,7 @@
     <module>neverpile-commons-condition</module>
     <module>neverpile-commons-openapi</module>
     <module>neverpile-commons-swagger-ui</module>
+    <module>neverpile-common-authorization</module>
   </modules>
 
   <dependencyManagement>
