@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.neverpile.openapi.rest.OpenApiAutoConfiguration
+com.neverpile.common.openapi.rest.OpenApiAutoConfiguration

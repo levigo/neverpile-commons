@@ -1,4 +1,4 @@
-package com.neverpile.openapi.rest;
+package com.neverpile.common.openapi.rest;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.neverpile.openapi.rest;
+package com.neverpile.common.openapi.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
