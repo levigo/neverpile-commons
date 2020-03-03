@@ -1,4 +1,4 @@
-package com.neverpile.authorization.policy;
+package com.neverpile.common.authorization.policy;
 
 /**
  * A policy repository is responsible for the management of a set of {@link AccessPolicy}s. In its

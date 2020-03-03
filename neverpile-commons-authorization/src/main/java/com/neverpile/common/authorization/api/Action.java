@@ -1,4 +1,4 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.api;
 
 /**
  * An action specifies the type of interaction with a resource that is the subject of a permission

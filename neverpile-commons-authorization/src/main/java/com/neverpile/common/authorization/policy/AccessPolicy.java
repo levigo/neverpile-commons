@@ -1,4 +1,4 @@
-package com.neverpile.authorization.policy;
+package com.neverpile.common.authorization.policy;
 
 import java.io.Serializable;
 import java.time.Instant;

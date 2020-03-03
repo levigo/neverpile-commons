@@ -19,8 +19,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.neverpile.authorization.policy.AccessPolicy;
-import com.neverpile.authorization.policy.Effect;
+import com.neverpile.common.authorization.policy.AccessPolicy;
+import com.neverpile.common.authorization.policy.Effect;
 import com.neverpile.common.condition.AndCondition;
 import com.neverpile.common.condition.Condition;
 import com.neverpile.common.condition.EqualsCondition;

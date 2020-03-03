@@ -1,4 +1,4 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.api;
 
 /**
  * An enum of actions most likely to be useful in almost any application. All action keys use the

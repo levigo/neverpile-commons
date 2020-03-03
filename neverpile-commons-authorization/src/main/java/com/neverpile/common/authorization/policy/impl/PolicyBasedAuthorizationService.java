@@ -1,4 +1,4 @@
-package com.neverpile.authorization.policy.impl;
+package com.neverpile.common.authorization.policy.impl;
 
 import java.util.List;
 import java.util.Set;
@@ -14,13 +14,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
-import com.neverpile.authorization.api.Action;
-import com.neverpile.authorization.api.AuthorizationContext;
-import com.neverpile.authorization.api.AuthorizationService;
-import com.neverpile.authorization.policy.AccessPolicy;
-import com.neverpile.authorization.policy.AccessRule;
-import com.neverpile.authorization.policy.Effect;
-import com.neverpile.authorization.policy.PolicyRepository;
+import com.neverpile.common.authorization.api.Action;
+import com.neverpile.common.authorization.api.AuthorizationContext;
+import com.neverpile.common.authorization.api.AuthorizationService;
+import com.neverpile.common.authorization.policy.AccessPolicy;
+import com.neverpile.common.authorization.policy.AccessRule;
+import com.neverpile.common.authorization.policy.Effect;
+import com.neverpile.common.authorization.policy.PolicyRepository;
 import com.neverpile.common.condition.CoreConditionRegistry;
 import com.neverpile.common.condition.config.ConditionModule;
 

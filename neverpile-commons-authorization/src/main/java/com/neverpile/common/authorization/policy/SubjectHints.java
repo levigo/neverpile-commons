@@ -1,4 +1,4 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.policy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,10 @@ import java.lang.annotation.Target;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import com.neverpile.common.authorization.api.HintRegistrations;
+
 /**
- * A qualifier for {@link HintRegistrations} pertaining to {@link Action}s.
+ * A qualifier for {@link HintRegistrations} pertaining to {@link AccessRule#getSubjects()}.
  */
 @Target({ElementType.FIELD,
   ElementType.METHOD,
@@ -16,6 +18,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
   ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Qualifier
-public @interface ActionHints {
+public @interface SubjectHints {
 
 }

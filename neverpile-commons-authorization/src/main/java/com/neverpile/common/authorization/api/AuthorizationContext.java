@@ -1,4 +1,4 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.api;
 
 import com.neverpile.common.condition.ConditionContext;
 

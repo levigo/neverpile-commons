@@ -1,4 +1,4 @@
-package com.neverpile.authorization.policy;
+package com.neverpile.common.authorization.policy;
 
 import static java.util.Arrays.asList;
 
@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.neverpile.authorization.api.Action;
+import com.neverpile.common.authorization.api.Action;
 import com.neverpile.common.condition.AndCondition;
 import com.neverpile.common.condition.Condition;
 

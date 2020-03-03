@@ -1,10 +1,10 @@
-package com.neverpile.authorization.policy.impl;
+package com.neverpile.common.authorization.policy.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.neverpile.authorization.api.AuthorizationContext;
+import com.neverpile.common.authorization.api.AuthorizationContext;
 import com.neverpile.common.specifier.Specifier;
 
 /**

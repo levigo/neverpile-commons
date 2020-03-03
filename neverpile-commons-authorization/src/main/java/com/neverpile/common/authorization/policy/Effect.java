@@ -1,4 +1,4 @@
-package com.neverpile.authorization.policy;
+package com.neverpile.common.authorization.policy;
 
 /**
  * An enum listing the possible outcomes of a authorization check.

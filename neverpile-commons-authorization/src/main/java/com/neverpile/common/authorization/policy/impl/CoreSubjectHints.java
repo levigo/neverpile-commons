@@ -1,13 +1,13 @@
-package com.neverpile.authorization.policy.impl;
+package com.neverpile.common.authorization.policy.impl;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.neverpile.authorization.api.HintRegistrations;
-import com.neverpile.authorization.policy.AccessRule;
-import com.neverpile.authorization.policy.SubjectHints;
+import com.neverpile.common.authorization.api.HintRegistrations;
+import com.neverpile.common.authorization.policy.AccessRule;
+import com.neverpile.common.authorization.policy.SubjectHints;
 
 /**
  * {@link HintRegistrations} for the core subject patterns.

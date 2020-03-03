@@ -1,4 +1,4 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.api;
 
 /**
  * {@link AuthorizationContextContributor} can contribute contextual information for authorization

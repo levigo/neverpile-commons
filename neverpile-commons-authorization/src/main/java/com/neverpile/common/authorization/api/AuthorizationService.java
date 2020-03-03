@@ -1,11 +1,11 @@
-package com.neverpile.authorization.api;
+package com.neverpile.common.authorization.api;
 
 import java.util.Set;
 
 import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.http.HttpRequest;
 
-import com.neverpile.authorization.policy.AccessPolicy;
+import com.neverpile.common.authorization.policy.AccessPolicy;
 
 /**
  * Implementation of this interface are responsible for making and/or delegating authorization

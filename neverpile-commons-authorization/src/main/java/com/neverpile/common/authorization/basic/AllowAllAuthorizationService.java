@@ -1,10 +1,10 @@
-package com.neverpile.authorization.basic;
+package com.neverpile.common.authorization.basic;
 
 import java.util.Set;
 
-import com.neverpile.authorization.api.Action;
-import com.neverpile.authorization.api.AuthorizationContext;
-import com.neverpile.authorization.api.AuthorizationService;
+import com.neverpile.common.authorization.api.Action;
+import com.neverpile.common.authorization.api.AuthorizationContext;
+import com.neverpile.common.authorization.api.AuthorizationService;
 
 /**
  * A trivial implementation of {@link AuthorizationService} which allows all access attempts.
