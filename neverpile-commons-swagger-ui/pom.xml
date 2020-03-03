@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.neverpile.commons</groupId>
+    <artifactId>neverpile-commons</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>neverpile-commons-swagger-ui</artifactId>
+
+  <properties>
+    <swagger.version>2.0.10</swagger.version>
+  </properties>
+  
+  <dependencies>
+    <dependency>
+      <groupId>com.neverpile.commons</groupId>
+      <artifactId>neverpile-commons-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.neverpile.commons</groupId>
+      <artifactId>neverpile-commons-openapi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-models</artifactId>
+    </dependency>
+
+    <!-- YML handling for openapi -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+    </dependency>
+
+    <!-- Swagger-UI -->
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>swagger-ui</artifactId>
+      <version>3.24.3</version>
+    </dependency>
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Swagger -->
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>${swagger.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-models</artifactId>
+        <version>${swagger.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
