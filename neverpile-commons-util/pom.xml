@@ -5,5 +5,6 @@
     <artifactId>neverpile-commons</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
+  
   <artifactId>neverpile-commons-util</artifactId>
 </project>

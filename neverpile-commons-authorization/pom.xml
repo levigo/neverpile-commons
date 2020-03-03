@@ -6,7 +6,7 @@
     <artifactId>neverpile-commons</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>neverpile-common-authorization</artifactId>
+  <artifactId>neverpile-commons-authorization</artifactId>
 
   <dependencies>
     <dependency>
