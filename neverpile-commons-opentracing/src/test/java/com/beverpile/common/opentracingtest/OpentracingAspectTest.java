@@ -1,6 +1,8 @@
 package com.beverpile.common.opentracingtest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +57,16 @@ public class OpentracingAspectTest {
         .containsEntry("bar", 4711) //
         .containsEntry("baz", true);
   }
+  
+  @Test
+  public void testSelfNamingParam() throws Exception {
+    service.selfNamingParam("hello");
+    
+    assertThat(service.getInvocationCounter()).isEqualTo(1);
+    assertThat(tt.getFinishedSpans()).hasSize(1);
+    assertThat(tt.getFinishedSpans().get(0).getTags()) //
+    .containsEntry("foo", "hello"); //
+  }
 
   @Test
   public void testPartialParams() throws Exception {
@@ -63,5 +75,22 @@ public class OpentracingAspectTest {
     assertThat(service.getInvocationCounter()).isEqualTo(1);
     assertThat(tt.getFinishedSpans()).hasSize(1);
     assertThat(tt.getFinishedSpans().get(0).getTags()).containsEntry("foo", "hello").hasSize(1);
+  }
+  
+  @Test
+  public void testTagExtractor() throws Exception {
+    HashMap<String, Object> m = new HashMap<>();
+    m.put("foo", "bar");
+    m.put("bar", 1234);
+    m.put("baz", false);
+    
+    service.parameterWithExtractor(m);
+
+    assertThat(service.getInvocationCounter()).isEqualTo(1);
+    assertThat(tt.getFinishedSpans()).hasSize(1);
+    assertThat(tt.getFinishedSpans().get(0).getTags()) //
+        .containsEntry("foo", "bar") //
+        .containsEntry("bar", 1234) //
+        .containsEntry("baz", false);
   }
 }
