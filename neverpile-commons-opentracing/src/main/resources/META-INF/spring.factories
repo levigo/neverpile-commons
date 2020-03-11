@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.neverpile.common.opentracing.aspect.OpentracingAspect
+com.neverpile.common.opentracing.aspect.OpentracingAspectAutoConfiguration

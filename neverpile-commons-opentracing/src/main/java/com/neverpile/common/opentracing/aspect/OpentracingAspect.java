@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import com.neverpile.common.opentracing.Tag;
@@ -33,8 +31,6 @@ import io.opentracing.tag.Tags;
  * An aspect used to create opentracing spans for calls to methods annotated with {@link TraceInvocation}.
  */
 @Aspect
-@Configuration
-@ConditionalOnBean(Tracer.class)
 public class OpentracingAspect {
   private static final Logger LOGGER = LoggerFactory.getLogger(OpentracingAspect.class);
   
