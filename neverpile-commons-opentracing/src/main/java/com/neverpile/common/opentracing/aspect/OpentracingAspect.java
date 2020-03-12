@@ -18,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 import com.neverpile.common.opentracing.Tag;
@@ -57,7 +58,7 @@ public class OpentracingAspect {
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
     Object[] args = joinPoint.getArgs();
 
-    Span span = startSpan(signature);
+    Span span = startSpan(signature, joinPoint.getThis());
 
     resolveParameters(signature, args, span);
 
@@ -141,18 +142,20 @@ public class OpentracingAspect {
       span.setTag(key, value.toString());
   }
 
-  private Span startSpan(final MethodSignature signature) {
+  private Span startSpan(final MethodSignature signature, final Object target) {
     Span parentSpan = tracer.scopeManager().activeSpan();
-    String operationName = getOperationName(signature);
+    String operationName = getOperationName(signature, target);
 
     return tracer.buildSpan(operationName).asChildOf(parentSpan).start();
   }
 
-  private String getOperationName(final MethodSignature signature) {
+  private String getOperationName(final MethodSignature signature, final Object target) {
     String operationName;
     TraceInvocation newSpanAnnotation = signature.getMethod().getAnnotation(TraceInvocation.class);
     if (StringUtils.isEmpty(newSpanAnnotation.operationName())) {
-      operationName = signature.getDeclaringType().getSimpleName() + "." + signature.getName();
+      operationName = (target != null
+          ? ClassUtils.getUserClass(target).getSimpleName()
+          : signature.getDeclaringType().getSimpleName()) + "." + signature.getName();
     } else {
       operationName = newSpanAnnotation.operationName();
     }
