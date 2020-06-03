@@ -19,9 +19,8 @@ public class CoreSubjectHints implements HintRegistrations {
   public List<Hint> getHints() {
     return Arrays.asList( //
         new Hint(AccessRule.ANY, "anything"), //
-        new Hint(AccessRule.AUTHENTICATED, "any-authenticated-principal"), //
-        new Hint(AccessRule.PRINCIPAL, "principal"), //
-        new Hint(AccessRule.ROLE, "role"), //
+        new Hint(AccessRule.AUTHENTICATED, "any authenticated principal"), //
+        new Hint(AccessRule.PRINCIPAL, "name of a principal (e.g. user id)"), //
         new Hint(AccessRule.ANONYMOUS_CALLER, "anonymous") //
     );
   }

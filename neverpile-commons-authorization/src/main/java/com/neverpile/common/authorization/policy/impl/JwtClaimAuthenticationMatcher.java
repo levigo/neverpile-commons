@@ -1,6 +1,7 @@
 package com.neverpile.common.authorization.policy.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -136,4 +137,8 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
     return false;
   }
 
+  @Override
+  public List<Hint> getHints() {
+    return Arrays.asList(new Hint(SUBJECT_PREFIX, "JWT custom claim (evaluated as a SpEL expression)"));
+  }
 }

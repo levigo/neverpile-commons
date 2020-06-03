@@ -27,8 +27,6 @@ public class AccessRule {
 
   public static final String PRINCIPAL = "principal:";
 
-  public static final String ROLE = "role:";
-
   @JsonProperty(required = false)
   private String name;
 
