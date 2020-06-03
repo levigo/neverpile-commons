@@ -28,13 +28,19 @@ import com.neverpile.common.condition.config.ConditionModule;
  *
  */
 @Component
-@Import({CoreConditionRegistry.class, ConditionModule.class})
+@Import({
+    CoreConditionRegistry.class, ConditionModule.class, AuthorityAuthenticationMatcher.class,
+    JwtClaimAuthenticationMatcher.class
+})
 public class PolicyBasedAuthorizationService implements AuthorizationService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PolicyBasedAuthorizationService.class);
 
   @Autowired
   private PolicyRepository policyRepository;
+
+  @Autowired
+  private List<AuthenticationMatcher> authenticationMatchers;
 
   @Override
   public boolean isAccessAllowed(final String resourceSpecifier, final Set<Action> actions,
@@ -46,12 +52,13 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
 
   /**
    * Request whether the access specified by the given resource specifier, the set of
-   * {@link Action}s within the given {@link AuthorizationContext} shall be permitted or not by the given policy.
+   * {@link Action}s within the given {@link AuthorizationContext} shall be permitted or not by the
+   * given policy.
    *
    * @param resourceSpecifier the resource specifier indicating the targeted resource
-   * @param actions           the actions that have been requested (or should be checked)
-   * @param context           the context of the request
-   * @param policy            the policy to use for the access control decision
+   * @param actions the actions that have been requested (or should be checked)
+   * @param context the context of the request
+   * @param policy the policy to use for the access control decision
    * @return <code>true</code> if the access shall be allowed, <code>false</code> otherwise
    * @see #isAccessAllowed(String, Set, AuthorizationContext)
    */
@@ -61,7 +68,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
 
     Effect e = policy.getRules().stream() //
         .filter(authentication.isAuthenticated() //
-            ? (r) -> matchesAuthenticatedUser(r, authentication) //
+            ? (r) -> matchesAuthentication(r, authentication) //
             : this::matchesAnonymousUser) //
         .filter(r -> matchesResource(r, resourceSpecifier)) //
         .filter(r -> matchesActions(r, actions)) //
@@ -76,7 +83,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
     return e == Effect.ALLOW;
   }
 
-  private boolean matchesAuthenticatedUser(final AccessRule rule, final Authentication authentication) {
+  private boolean matchesAuthentication(final AccessRule rule, final Authentication authentication) {
     List<String> subjects = rule.getSubjects();
 
     if (subjects.contains(AccessRule.ANY) || subjects.contains(AccessRule.AUTHENTICATED)) {
@@ -89,8 +96,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
       return true;
     }
 
-    boolean m = authentication.getAuthorities().stream() //
-        .anyMatch(a -> subjects.contains(AccessRule.ROLE + a.getAuthority()));
+    boolean m = authenticationMatchers.stream().anyMatch(am -> am.matchAuthentication(authentication, subjects));
 
     LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities", rule.getName(),
         m ? "matches" : "does not match", authentication.getName(),
@@ -122,7 +128,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
    * <li>{@code document.**} &mdash; matches all sub-resources of documents</li>
    * </ul>
    *
-   * @param rule              for which to test the match
+   * @param rule for which to test the match
    * @param resourceSpecifier the resource specificer to match
    * @return <code>true</code> if a match was found
    * @See {@link AntPathMatcher}
