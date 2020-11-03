@@ -6,6 +6,7 @@ import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.http.HttpRequest;
 
 import com.neverpile.common.authorization.policy.AccessPolicy;
+import com.neverpile.common.authorization.policy.Effect;
 
 /**
  * Implementation of this interface are responsible for making and/or delegating authorization
@@ -15,9 +16,9 @@ import com.neverpile.common.authorization.policy.AccessPolicy;
  * <p>
  * Further sources of input for decisions will usually be rights, roles scopes etc. of the principal
  * attempting the access as well as possibly other information like he current {@link HttpRequest},
- * the {@link Session}, configuration information (e.g. an {@link AccessPolicy}) or other
- * factors. However, these sources are not mandated by this interface and must thus be propagated by
- * other means.
+ * the {@link Session}, configuration information (e.g. an {@link AccessPolicy}) or other factors.
+ * However, these sources are not mandated by this interface and must thus be propagated by other
+ * means.
  */
 public interface AuthorizationService {
   /**
@@ -30,4 +31,17 @@ public interface AuthorizationService {
    * @return <code>true</code> if the access shall be allowed, <code>false</code> otherwise
    */
   boolean isAccessAllowed(String resourceSpecifier, Set<Action> actions, AuthorizationContext context);
+
+  /**
+   * Get the set of {@link Action}s that shall be allowed within the given
+   * {@link AuthorizationContext} for the specified resource. If an AccessPolicy specifies a
+   * wildcard for an action, this wildcard will be contained in the result set. The calculation
+   * honors the {@link Effect} of the rules: a {@link Effect#DENY} earlier on precludes an action
+   * from being allowed despite a later {@link Effect#ALLOW}.
+   * 
+   * @param resourceSpecifier the resource specifier indicating the targeted resource
+   * @param context the context of the request
+   * @return the actions that shall be allowed
+   */
+  Set<String> getAllowedActions(String resourceSpecifier, AuthorizationContext context);
 }

@@ -1,5 +1,6 @@
 package com.neverpile.common.authorization.basic;
 
+import java.util.Collections;
 import java.util.Set;
 
 import com.neverpile.common.authorization.api.Action;
@@ -14,5 +15,10 @@ public class AllowAllAuthorizationService implements AuthorizationService {
   public boolean isAccessAllowed(final String resourceSpecifier, final Set<Action> actions,
       final AuthorizationContext context) {
     return true;
+  }
+
+  @Override
+  public Set<String> getAllowedActions(final String resourceSpecifier, final AuthorizationContext context) {
+    return Collections.singleton(Action.ANY.key());
   }
 }
