@@ -1,7 +1,8 @@
 package com.neverpile.common.authorization.policy.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,6 +22,7 @@ import org.springframework.util.AntPathMatcher;
 import com.neverpile.common.authorization.api.Action;
 import com.neverpile.common.authorization.api.AuthorizationContext;
 import com.neverpile.common.authorization.api.AuthorizationService;
+import com.neverpile.common.authorization.api.Permission;
 import com.neverpile.common.authorization.policy.AccessPolicy;
 import com.neverpile.common.authorization.policy.AccessRule;
 import com.neverpile.common.authorization.policy.Effect;
@@ -103,29 +105,44 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   }
 
   @Override
-  public Set<String> getAllowedActions(final String resourceSpecifier, final AuthorizationContext context) {
+  public List<Permission> getPermissions(final String resourceSpecifier, final AuthorizationContext context) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    final Set<String> deniedActions = new HashSet<>();
+    // Collection the permissions into a list optimizing the number of permissions
+    // by combining successive permissions with the same effect into one.
+    return getPermissions(resourceSpecifier, context, authentication) //
+        .collect(ArrayList::new, (l, p) -> {
+          if (!l.isEmpty()) {
+            Permission last = l.get(l.size() - 1);
+            if (last.getEffect() == p.getEffect()) {
+              ArrayList<String> combined = new ArrayList<>(last.getActionKeys());
+              combined.addAll(p.getActionKeys());
+              last.setActionKeys(combined);
+              return;
+            }
+          }
+          l.add(p);
+        }, ArrayList::addAll);
+  }
 
-    return policyRepository.getCurrentPolicy().getRules().stream() //
+  private Stream<Permission> getPermissions(final String resourceSpecifier, final AuthorizationContext context,
+      final Authentication authentication) {
+    AccessPolicy policy = policyRepository.getCurrentPolicy();
+
+    // stream of matching rules converted to permissions
+    Stream<Permission> rulePermissions = policy.getRules().stream() //
         .filter(null != authentication && authentication.isAuthenticated() //
             ? (r) -> matchesAuthentication(r, authentication) //
             : this::matchesAnonymousUser) //
         .filter(r -> matchesResource(r, resourceSpecifier)) //
         .filter(r -> satisfiesConditions(r, context)) //
-        .sequential() //
-        .flatMap(r -> {
-          if (r.getEffect() == Effect.ALLOW) {
-            // filter out all previously denied actions
-            return r.getActions().stream().filter(a -> !matchesActions(a, deniedActions));
-          } else {
-            // just remember the actions as denied
-            deniedActions.addAll(r.getActions());
-            return Stream.<String> of();
-          }
-        }) //
-        .collect(Collectors.toSet());
+        .map(r -> new Permission(r.getEffect(), r.getActions()));
+
+    // if the default effect is ALLOW, add a final permission
+    if (policy.getDefaultEffect() == Effect.ALLOW)
+      return Stream.concat(rulePermissions, Stream.of(new Permission(Effect.ALLOW, Arrays.asList(Action.ANY.key()))));
+
+    return rulePermissions;
   }
 
   private boolean matchesAuthentication(final AccessRule rule, final Authentication authentication) {
@@ -195,15 +212,6 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
 
   private boolean matchesResource(final String resourcePattern, final String resourceSpecifier) {
     return resourcePatternMatcher.match(resourcePattern + ".**", resourceSpecifier);
-  }
-
-  private boolean matchesActions(final AccessRule rule, final Set<Action> actions) {
-    boolean m = actions.stream().allMatch(a -> matchesActions(a.key(), rule.getActions()))
-        || rule.getActions().contains(Action.ANY.key());
-
-    LOGGER.debug("  Rule '{}' {} the actions ", rule.getName(), m ? "matches" : "does not match", actions);
-
-    return m;
   }
 
   /**

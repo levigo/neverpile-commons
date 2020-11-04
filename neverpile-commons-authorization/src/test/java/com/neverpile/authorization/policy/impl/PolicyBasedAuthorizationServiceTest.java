@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.neverpile.common.authorization.api.Action;
+import com.neverpile.common.authorization.api.Permission;
 import com.neverpile.common.authorization.policy.AccessPolicy;
 import com.neverpile.common.authorization.policy.AccessRule;
 import com.neverpile.common.authorization.policy.Effect;
@@ -68,6 +69,9 @@ public class PolicyBasedAuthorizationServiceTest {
 
       return accessPolicy;
     });
+
+    assertThat(authService.getPermissions("foo", eac)) //
+        .containsExactly(Permission.allow("anAllowedAction"), Permission.deny("aDeniedAction"), Permission.allow("*"));
 
     assertThat(authService.isAccessAllowed("foo", actionSet("anAllowedAction"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("anUnhandledAction"), eac)).isTrue(); // default
@@ -216,15 +220,15 @@ public class PolicyBasedAuthorizationServiceTest {
       return accessPolicy;
     });
 
-    assertThat(authService.getAllowedActions("foo", eac)) //
-        .containsExactly("allowedForAuthenticated", "allowedForAnyone");
+    assertThat(authService.getPermissions("foo", eac)) //
+        .containsExactly(Permission.allow("allowedForAuthenticated", "allowedForAnyone"));
 
     assertThat(
         authService.isAccessAllowed("foo", actionSet("allowedForAuthenticated", "allowedForAnyone"), eac)).isTrue();
 
     SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("noone", "noone"));
 
-    assertThat(authService.getAllowedActions("foo", eac)).containsExactly("allowedForAnyone");
+    assertThat(authService.getPermissions("foo", eac)).containsExactly(Permission.allow("allowedForAnyone"));
 
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForAnyone"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForAuthenticated"), eac)).isFalse();
@@ -263,12 +267,13 @@ public class PolicyBasedAuthorizationServiceTest {
       return accessPolicy;
     });
 
-    assertThat(authService.getAllowedActions("foo", eac)).containsExactly("allowedForUser", "allowedForAnyone");
+    assertThat(authService.getPermissions("foo", eac)).containsExactly(
+        Permission.allow("allowedForUser", "allowedForAnyone"));
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForUser", "allowedForAnyone"), eac)).isTrue();
 
     SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("johndoe", "", "USER"));
 
-    assertThat(authService.getAllowedActions("foo", eac)).containsExactly("allowedForAnyone");
+    assertThat(authService.getPermissions("foo", eac)).containsExactly(Permission.allow("allowedForAnyone"));
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForAnyone"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForUser", "allowedForAnyone"), eac)).isFalse();
   }
@@ -297,15 +302,15 @@ public class PolicyBasedAuthorizationServiceTest {
       return accessPolicy;
     });
 
-    assertThat(authService.getAllowedActions("foo", eac)) //
-        .containsExactlyInAnyOrder("allowedForRoleUSER", "allowedForAnyone");
-    
+    assertThat(authService.getPermissions("foo", eac)) //
+        .containsExactly(Permission.allow("allowedForRoleUSER", "allowedForAnyone"));
+
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForRoleUSER", "allowedForAnyone"), eac)).isTrue();
 
     SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "", "A_ROLE"));
 
-    assertThat(authService.getAllowedActions("foo", eac)).containsExactly("allowedForAnyone");
-    
+    assertThat(authService.getPermissions("foo", eac)).containsExactly(Permission.allow("allowedForAnyone"));
+
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForAnyone"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedForRoleUSER", "allowedForAnyone"), eac)).isFalse();
   }
@@ -334,10 +339,10 @@ public class PolicyBasedAuthorizationServiceTest {
       return accessPolicy;
     });
 
-    assertThat(authService.getAllowedActions("foo", eac)).containsExactly("allowedInFoo");
-    assertThat(authService.getAllowedActions("bar", eac)).containsExactly("allowedInBar");
-    assertThat(authService.getAllowedActions("baz", eac)).isEmpty();
-    
+    assertThat(authService.getPermissions("foo", eac)).containsExactly(Permission.allow("allowedInFoo"));
+    assertThat(authService.getPermissions("bar", eac)).containsExactly(Permission.allow("allowedInBar"));
+    assertThat(authService.getPermissions("baz", eac)).isEmpty();
+
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedInFoo"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("allowedInBar"), eac)).isFalse();
     assertThat(authService.isAccessAllowed("bar", actionSet("allowedInFoo"), eac)).isFalse();
@@ -373,8 +378,12 @@ public class PolicyBasedAuthorizationServiceTest {
       return accessPolicy;
     });
 
-    assertThat(authService.getAllowedActions("foo", eac)) //
-        .containsExactlyInAnyOrder("explicitlyAllowed", "deniedByWildcardWithSub:allow:foo");
+    assertThat(authService.getPermissions("foo", eac)) //
+        .containsExactly(Permission.deny("explicitlyDenied", "deniedByWildcard:*", "deniedByWildcardWithSub:deny:*"),
+            Permission.allow("explicitlyAllowed", //
+                "deniedByWildcard:foo", "deniedByWildcard:foo:bar", //
+                "deniedByWildcardWithSub:allow:foo", //
+                "deniedByWildcardWithSub:deny:foo"));
 
     assertThat(authService.isAccessAllowed("foo", actionSet("explicitlyAllowed"), eac)).isTrue();
     assertThat(authService.isAccessAllowed("foo", actionSet("deniedByWildcardWithSub:allow:foo"), eac)).isTrue();

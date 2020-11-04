@@ -1,5 +1,6 @@
 package com.neverpile.common.authorization.api;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.boot.web.servlet.server.Session;
@@ -33,15 +34,22 @@ public interface AuthorizationService {
   boolean isAccessAllowed(String resourceSpecifier, Set<Action> actions, AuthorizationContext context);
 
   /**
-   * Get the set of {@link Action}s that shall be allowed within the given
-   * {@link AuthorizationContext} for the specified resource. If an AccessPolicy specifies a
-   * wildcard for an action, this wildcard will be contained in the result set. The calculation
-   * honors the {@link Effect} of the rules: a {@link Effect#DENY} earlier on precludes an action
-   * from being allowed despite a later {@link Effect#ALLOW}.
+   * Retrieve the list of permissions that are applicable for the given resource in the given
+   * context. {@link Permission}s consist of a list of action keys or action key patterns along with
+   * an {@link Effect} to be caused by a match. The algorithm for the evaluation of the permissions
+   * is as follows:
+   * <ul>
+   * <li>Test the intended action against each permission in sequence until a match is found.
+   * <li>As soon as a match is found, use the permission's effect as the outcome of the decision.
+   * <li>If no match is found, deny the action.
+   * </ul>
+   * The access policy's default effect ({@link AccessPolicy#getDefaultEffect()}) is automatically
+   * included in the permissions by adding a final permission allowing all actions if the default
+   * effect is {@link Effect#ALLOW}.
    * 
    * @param resourceSpecifier the resource specifier indicating the targeted resource
    * @param context the context of the request
-   * @return the actions that shall be allowed
+   * @return the applicable permissions
    */
-  Set<String> getAllowedActions(String resourceSpecifier, AuthorizationContext context);
+  List<Permission> getPermissions(String resourceSpecifier, AuthorizationContext context);
 }
