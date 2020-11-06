@@ -108,7 +108,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   public List<Permission> getPermissions(final String resourceSpecifier, final AuthorizationContext context) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    // Collection the permissions into a list optimizing the number of permissions
+    // Collecting the permissions into a list and optimizing the number of permissions
     // by combining successive permissions with the same effect into one.
     return getPermissions(resourceSpecifier, context, authentication) //
         .collect(ArrayList::new, (l, p) -> {
@@ -139,8 +139,9 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
         .map(r -> new Permission(r.getEffect(), r.getActions()));
 
     // if the default effect is ALLOW, add a final permission
-    if (policy.getDefaultEffect() == Effect.ALLOW)
+    if (policy.getDefaultEffect() == Effect.ALLOW) {
       return Stream.concat(rulePermissions, Stream.of(new Permission(Effect.ALLOW, Arrays.asList(Action.ANY.key()))));
+   }
 
     return rulePermissions;
   }
@@ -215,7 +216,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   }
 
   /**
-   * Match an action keyagainst a list of allowed actions. The matching rules are:
+   * Match an action key against a list of allowed actions. The matching rules are:
    * <ul>
    * <li>Allowed action <code>*</code> ({@link Action#ANY}) matches any action key.
    * <li>Allowed action <code>ACTION</code> matches key <code>ACTION</code>,
@@ -235,8 +236,10 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   }
 
   /**
-   * Match an action key using trailing wildcards: {@code NAMESPACE:*} matches all Actions with keys
-   * starting with {@code NAMESPACE:}, {@code NAMESPACE:SUB:*} matches all Actions with keys
+   * Match an action key using trailing wildcards: {@code NAMESPACE:*} matches all actions with keys
+
+   * starting with {@code NAMESPACE:}, {@code NAMESPACE:SUB:*} matches all actions with keys
+
    * starting with {@code NAMESPACE:SUB:} etc.
    * 
    * @param key the action key

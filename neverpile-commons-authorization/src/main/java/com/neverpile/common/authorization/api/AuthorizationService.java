@@ -16,7 +16,7 @@ import com.neverpile.common.authorization.policy.Effect;
  * {@link AuthorizationContext}.
  * <p>
  * Further sources of input for decisions will usually be rights, roles scopes etc. of the principal
- * attempting the access as well as possibly other information like he current {@link HttpRequest},
+ * attempting the access as well as possibly other information like the current {@link HttpRequest},
  * the {@link Session}, configuration information (e.g. an {@link AccessPolicy}) or other factors.
  * However, these sources are not mandated by this interface and must thus be propagated by other
  * means.
