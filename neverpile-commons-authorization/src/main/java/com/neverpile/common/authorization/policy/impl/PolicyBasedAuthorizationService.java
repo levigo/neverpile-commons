@@ -1,8 +1,13 @@
 package com.neverpile.common.authorization.policy.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +22,7 @@ import org.springframework.util.AntPathMatcher;
 import com.neverpile.common.authorization.api.Action;
 import com.neverpile.common.authorization.api.AuthorizationContext;
 import com.neverpile.common.authorization.api.AuthorizationService;
+import com.neverpile.common.authorization.api.Permission;
 import com.neverpile.common.authorization.policy.AccessPolicy;
 import com.neverpile.common.authorization.policy.AccessRule;
 import com.neverpile.common.authorization.policy.Effect;
@@ -66,21 +72,78 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
       final AuthorizationContext context, final AccessPolicy policy) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    Effect e = policy.getRules().stream() //
+    List<AccessRule> matchingRules = policy.getRules().stream() //
         .filter(authentication.isAuthenticated() //
             ? (r) -> matchesAuthentication(r, authentication) //
             : this::matchesAnonymousUser) //
         .filter(r -> matchesResource(r, resourceSpecifier)) //
-        .filter(r -> matchesActions(r, actions)) //
-        .filter(r -> satisfiesConditions(r, actions, context)) //
-        .map(AccessRule::getEffect) //
-        .findFirst() //
-        .orElse(policy.getDefaultEffect());
+        .filter(r -> satisfiesConditions(r, context)) //
+        .collect(Collectors.toList());
+
+    // match each action individually
+    boolean allMatched = true;
+    for (Action a : actions) {
+      Optional<AccessRule> matchingRule = matchingRules.stream() //
+          .filter(r -> matchesActions(a.key(), r.getActions())) //
+          .findFirst();
+      if (matchingRule.isPresent() && matchingRule.get().getEffect() == Effect.DENY) {
+        // deny means deny
+        return false;
+      }
+      allMatched &= matchingRule.isPresent();
+    }
+
+    // evaluate applicable effect: if we had explicit matches for all rules, we allow, otherwise we
+    // revert to the default effect
+    Effect e = allMatched ? Effect.ALLOW : //
+        policy.getDefaultEffect() != null ? policy.getDefaultEffect() : Effect.DENY;
 
     LOGGER.debug("Authorization for {} on {} with principal {}: {}", actions, resourceSpecifier,
         authentication.isAuthenticated() ? authentication.getPrincipal() : "anonymous", e);
 
     return e == Effect.ALLOW;
+  }
+
+  @Override
+  public List<Permission> getPermissions(final String resourceSpecifier, final AuthorizationContext context) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    // Collecting the permissions into a list and optimizing the number of permissions
+    // by combining successive permissions with the same effect into one.
+    return getPermissions(resourceSpecifier, context, authentication) //
+        .collect(ArrayList::new, (l, p) -> {
+          if (!l.isEmpty()) {
+            Permission last = l.get(l.size() - 1);
+            if (last.getEffect() == p.getEffect()) {
+              ArrayList<String> combined = new ArrayList<>(last.getActionKeys());
+              combined.addAll(p.getActionKeys());
+              last.setActionKeys(combined);
+              return;
+            }
+          }
+          l.add(p);
+        }, ArrayList::addAll);
+  }
+
+  private Stream<Permission> getPermissions(final String resourceSpecifier, final AuthorizationContext context,
+      final Authentication authentication) {
+    AccessPolicy policy = policyRepository.getCurrentPolicy();
+
+    // stream of matching rules converted to permissions
+    Stream<Permission> rulePermissions = policy.getRules().stream() //
+        .filter(null != authentication && authentication.isAuthenticated() //
+            ? (r) -> matchesAuthentication(r, authentication) //
+            : this::matchesAnonymousUser) //
+        .filter(r -> matchesResource(r, resourceSpecifier)) //
+        .filter(r -> satisfiesConditions(r, context)) //
+        .map(r -> new Permission(r.getEffect(), r.getActions()));
+
+    // if the default effect is ALLOW, add a final permission
+    if (policy.getDefaultEffect() == Effect.ALLOW) {
+      return Stream.concat(rulePermissions, Stream.of(new Permission(Effect.ALLOW, Arrays.asList(Action.ANY.key()))));
+   }
+
+    return rulePermissions;
   }
 
   private boolean matchesAuthentication(final AccessRule rule, final Authentication authentication) {
@@ -98,9 +161,11 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
 
     boolean m = authenticationMatchers.stream().anyMatch(am -> am.matchAuthentication(authentication, subjects));
 
-    LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities", rule.getName(),
-        m ? "matches" : "does not match", authentication.getName(),
-        authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities", rule.getName(),
+          m ? "matches" : "does not match", authentication.getName(),
+          authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(
+              Collectors.joining(",")));
 
     return m;
   }
@@ -150,20 +215,57 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
     return resourcePatternMatcher.match(resourcePattern + ".**", resourceSpecifier);
   }
 
-  private boolean matchesActions(final AccessRule rule, final Set<Action> actions) {
-    boolean m = actions.stream().allMatch(a -> rule.getActions().contains(a.key())) || rule.getActions().contains("*");
-
-    LOGGER.debug("  Rule '{}' {} the actions ", rule.getName(), m ? "matches" : "does not match", actions);
-
-    return m;
+  /**
+   * Match an action key against a list of allowed actions. The matching rules are:
+   * <ul>
+   * <li>Allowed action <code>*</code> ({@link Action#ANY}) matches any action key.
+   * <li>Allowed action <code>ACTION</code> matches key <code>ACTION</code>,
+   * <code>NAMESPACE:SUB:ACTION</code> matches key <code>NAMESPACE:SUB:ACTION</code> etc. (trivial
+   * key equality).
+   * <li><code>NAMESPACE:*</code> matches all keys starting with <code>NAMESPACE:</code>,
+   * <code>NAMESPACE:SUB:*</code> matches all keys starting with <code>NAMESPACE:SUB:</code> etc.
+   * (trailing wildcard match).
+   * <ul>
+   * 
+   * @param key the action key
+   * @param actions the allowed action patterns
+   * @return <code>true</code> if the action matches
+   */
+  private boolean matchesActions(final String key, final Collection<String> actions) {
+    return actions.contains(Action.ANY.key()) || actions.contains(key) || matchesWildcardAction(key, actions);
   }
 
-  private boolean satisfiesConditions(final AccessRule rule, final Set<Action> actions,
-      final AuthorizationContext conditionContext) {
+  /**
+   * Match an action key using trailing wildcards: {@code NAMESPACE:*} matches all actions with keys
+
+   * starting with {@code NAMESPACE:}, {@code NAMESPACE:SUB:*} matches all actions with keys
+
+   * starting with {@code NAMESPACE:SUB:} etc.
+   * 
+   * @param key the action key
+   * @param actions the allowed action patterns
+   * @return <code>true</code> if the action matches
+   */
+  private boolean matchesWildcardAction(final String key, final Collection<String> actions) {
+    StringBuilder sb = new StringBuilder(key.length());
+    for (String part : key.split(":")) {
+      sb.append(part);
+      sb.append(":*");
+
+      if (actions.contains(sb.toString()))
+        return true;
+
+      sb.deleteCharAt(sb.length() - 1);
+    }
+
+    return false;
+  }
+
+  private boolean satisfiesConditions(final AccessRule rule, final AuthorizationContext conditionContext) {
     boolean m = rule.getConditions().matches(conditionContext);
 
-    LOGGER.debug("  Rule '{}' the context {} the conditions ", rule.getName(), m ? "satisfies" : "does not satisfy",
-        actions);
+    LOGGER.debug("  Rule '{}' the context {} the conditions {}", rule.getName(), m ? "satisfies" : "does not satisfy",
+        rule.getConditions());
 
     return m;
   }

@@ -18,4 +18,24 @@ public interface Action {
    * @return the unique key
    */
   String key();
+  
+  /**
+   * The action matching all other actions with the key <code>*</code>.
+   */
+  public static final Action ANY = of("*");
+  
+  /**
+   * Generate an action with a given key.
+   * 
+   * @param key the key
+   * @return the action
+   */
+  public static Action of(final String key) {
+    return new Action() {
+      @Override
+      public String key() {
+        return key;
+      }
+    };
+  }
 }
