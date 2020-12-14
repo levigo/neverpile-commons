@@ -109,26 +109,28 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
     if (authentication instanceof JwtAuthenticationToken) {
       JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) authentication;
 
+      // expose all claims as variables
+      EvaluationContext ctx = SimpleEvaluationContext //
+          .forPropertyAccessors(new NullForMissingEntryMapAccessor(), new ObjectNodeAccessor()) //
+          .withMethodResolvers(DataBindingMethodResolver.forInstanceMethodInvocation()) //
+          .withRootObject(jwtToken.getToken().getClaims()) //
+          .build();
+      
       for (String subject : subjects) {
         if (subject.startsWith(SUBJECT_PREFIX)) {
           String expressionAsString = subject.substring(SUBJECT_PREFIX.length());
           Expression expression = parser.parseExpression(expressionAsString);
 
-          // expose all claims as variables
-          EvaluationContext ctx = SimpleEvaluationContext //
-              .forPropertyAccessors(new NullForMissingEntryMapAccessor(), new ObjectNodeAccessor()) //
-              .withMethodResolvers(DataBindingMethodResolver.forInstanceMethodInvocation()) //
-              .withRootObject(jwtToken.getToken().getClaims()) //
-              .build();
-
           try {
             boolean outcome;
             Object result = expression.getValue(ctx, Object.class);
-            if (null == result)
+            if (null == result) {
               outcome = false;
-            if (result instanceof Boolean)
+            } else  if (result instanceof Boolean) {
               outcome = (Boolean) result;
-            outcome = true;
+            } else {
+              outcome = true;
+            }
             
             LOGGER.debug("  The JWT claims {} the expression {}", outcome ? "SATISFY" : "do not satisfy", expressionAsString);
             
