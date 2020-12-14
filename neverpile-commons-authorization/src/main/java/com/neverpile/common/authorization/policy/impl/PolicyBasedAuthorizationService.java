@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neverpile.common.authorization.api.Action;
 import com.neverpile.common.authorization.api.AuthorizationContext;
 import com.neverpile.common.authorization.api.AuthorizationService;
@@ -47,6 +49,9 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
 
   @Autowired
   private List<AuthenticationMatcher> authenticationMatchers;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Override
   public boolean isAccessAllowed(final String resourceSpecifier, final Set<Action> actions,
@@ -154,15 +159,15 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
     }
 
     if (subjects.contains(AccessRule.PRINCIPAL + authentication.getName())) {
-      LOGGER.debug("  Rule '{}' matches the authenticated principal {}", rule.getName(), authentication.getName());
+      LOGGER.debug("  Rule '{}' MATCHES the authenticated principal {}", rule.getName(), authentication.getName());
       return true;
     }
 
     boolean m = authenticationMatchers.stream().anyMatch(am -> am.matchAuthentication(authentication, subjects));
 
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities", rule.getName(),
-          m ? "matches" : "does not match", authentication.getName(),
+      LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities {}", rule.getName(),
+          m ? "MATCHES" : "does not match", authentication.getName(),
           authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(
               Collectors.joining(",")));
 
@@ -172,7 +177,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   private boolean matchesAnonymousUser(final AccessRule rule) {
     boolean m = rule.getSubjects().contains(AccessRule.ANY) || rule.getSubjects().contains(AccessRule.ANONYMOUS_CALLER);
 
-    LOGGER.debug("  Rule '{}' {} the anonymous user", rule.getName(), m ? "matches" : "does not match");
+    LOGGER.debug("  Rule '{}' {} the anonymous user", rule.getName(), m ? "MATCHES" : "does not match");
 
     return m;
   }
@@ -200,7 +205,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   private boolean matchesResource(final AccessRule rule, final String resourceSpecifier) {
     boolean m = rule.getResources().stream().anyMatch(r -> matchesResource(r, resourceSpecifier));
 
-    LOGGER.debug("  Rule '{}' {} the resource {}", rule.getName(), m ? "matches" : "does not match", resourceSpecifier);
+    LOGGER.debug("  Rule '{}' {} the resource {}", rule.getName(), m ? "MATCHES" : "does not match", resourceSpecifier);
 
     return m;
   }
@@ -261,8 +266,16 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   private boolean satisfiesConditions(final AccessRule rule, final AuthorizationContext conditionContext) {
     boolean m = rule.getConditions().matches(conditionContext);
 
-    LOGGER.debug("  Rule '{}' the context {} the conditions {}", rule.getName(), m ? "satisfies" : "does not satisfy",
-        rule.getConditions());
+    if (LOGGER.isDebugEnabled())
+      try {
+        LOGGER.debug("  Rule '{}' the context {} the conditions {}", rule.getName(),
+            m ? "SATISFIES" : "does not satisfy",
+            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rule.getConditions()));
+      } catch (JsonProcessingException e) {
+        LOGGER.debug(
+            "  Rule '{}' the context {} the conditions (but could not write the conditions as JSON, because of {})",
+            rule.getName(), m ? "SATISFIES" : "does not satisfy", e.getMessage());
+      }
 
     return m;
   }
