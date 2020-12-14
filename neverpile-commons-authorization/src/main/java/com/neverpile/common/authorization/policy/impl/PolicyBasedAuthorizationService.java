@@ -50,9 +50,6 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   @Autowired
   private List<AuthenticationMatcher> authenticationMatchers;
 
-  @Autowired
-  private ObjectMapper objectMapper;
-
   @Override
   public boolean isAccessAllowed(final String resourceSpecifier, final Set<Action> actions,
       final AuthorizationContext context) {
@@ -270,7 +267,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
       try {
         LOGGER.debug("  Rule '{}' the context {} the conditions {}", rule.getName(),
             m ? "SATISFIES" : "does not satisfy",
-            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rule.getConditions()));
+            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(rule.getConditions()));
       } catch (JsonProcessingException e) {
         LOGGER.debug(
             "  Rule '{}' the context {} the conditions (but could not write the conditions as JSON, because of {})",
