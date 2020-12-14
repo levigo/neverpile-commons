@@ -111,7 +111,8 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
 
       for (String subject : subjects) {
         if (subject.startsWith(SUBJECT_PREFIX)) {
-          Expression expression = parser.parseExpression(subject.substring(SUBJECT_PREFIX.length()));
+          String expressionAsString = subject.substring(SUBJECT_PREFIX.length());
+          Expression expression = parser.parseExpression(expressionAsString);
 
           // expose all claims as variables
           EvaluationContext ctx = SimpleEvaluationContext //
@@ -121,12 +122,17 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
               .build();
 
           try {
+            boolean outcome;
             Object result = expression.getValue(ctx, Object.class);
             if (null == result)
-              return false;
+              outcome = false;
             if (result instanceof Boolean)
-              return (Boolean) result;
-            return true;
+              outcome = (Boolean) result;
+            outcome = true;
+            
+            LOGGER.debug("  The JWT claims {} the expression {}", outcome ? "SATISFY" : "do not satisfy", expressionAsString);
+            
+            return outcome;
           } catch (EvaluationException e) {
             LOGGER.warn("Failed to evaluate expression `{}`: {}", expression.getExpressionString(), e.getLocalizedMessage());
           }
