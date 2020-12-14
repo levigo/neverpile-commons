@@ -3,6 +3,7 @@ package com.neverpile.common.authorization.policy.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,11 +111,14 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
       JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) authentication;
 
       // expose all claims as variables
+      Map<String, Object> claims = jwtToken.getToken().getClaims();
       EvaluationContext ctx = SimpleEvaluationContext //
           .forPropertyAccessors(new NullForMissingEntryMapAccessor(), new ObjectNodeAccessor()) //
           .withMethodResolvers(DataBindingMethodResolver.forInstanceMethodInvocation()) //
-          .withRootObject(jwtToken.getToken().getClaims()) //
+          .withRootObject(claims) //
           .build();
+      
+      LOGGER.debug("  Matching authentication against JWT claims {}", claims);
       
       for (String subject : subjects) {
         if (subject.startsWith(SUBJECT_PREFIX)) {
