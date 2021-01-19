@@ -1,0 +1,23 @@
+{
+  "validFrom" : "1970-01-01T00:00:00.000Z",
+  "description": "some policy",
+  "default_effect": "DENY",
+  "rules": [
+    {
+      "name": "Test deserialization of or-condition",
+      "effect": "ALLOW",
+      "subjects": ["*"],
+      "resources": ["*"],
+      "actions": ["*"],
+      "conditions": {
+        "or": {
+          "conditions": [
+            { "equals": {	"foo1": true	} },
+            { "equals": {	"foo2": true	} },
+            { "equals": {	"foo3": true	} }
+          ]
+        }
+      }
+    }
+  ]
+}
