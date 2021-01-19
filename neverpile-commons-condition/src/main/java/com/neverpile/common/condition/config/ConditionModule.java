@@ -1,6 +1,6 @@
 package com.neverpile.common.condition.config;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.BeanDescription;
@@ -25,7 +24,6 @@ import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -69,7 +67,7 @@ public class ConditionModule extends SimpleModule {
     setDeserializerModifier(new ConditionDeserializerModifier());
     addKeySerializer(Specifier.class, new JsonSerializer<Specifier>() {
       @Override
-      public void serialize(Specifier value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      public void serialize(final Specifier value, final JsonGenerator gen, final SerializerProvider serializers) throws IOException {
         gen.writeFieldName(value.asString());
       }
     });
@@ -154,7 +152,7 @@ public class ConditionModule extends SimpleModule {
       }
 
       private void deserializeNamedCondition(final JsonParser p, final DeserializationContext ctxt, final Object beanOrClass, final String conditionName)
-          throws UnrecognizedPropertyException, JsonMappingException, IOException, JsonProcessingException {
+          throws IOException {
         Class<? extends Condition> conditionClass = conditionClassByName.get(conditionName);
         if (null == conditionClass)
           throw UnrecognizedPropertyException.from(p, beanOrClass, conditionName,
@@ -174,9 +172,9 @@ public class ConditionModule extends SimpleModule {
       }
 
       @Override
-      protected void handleIgnoredProperty(JsonParser p, DeserializationContext ctxt, Object beanOrClass, String propName) throws IOException {
+      protected void handleIgnoredProperty(final JsonParser p, final DeserializationContext ctxt, final Object beanOrClass, final String propName) throws IOException {
         /*
-         * Support conditions in an array namend "conditions" for cases when the condition names are not unique.
+         * Support conditions in an array named "conditions" for cases when the condition names are not unique.
          * 
          * The JSON must look like this:
          * "or": {
@@ -189,9 +187,15 @@ public class ConditionModule extends SimpleModule {
          * 
          * These are also acceptable:
          * "or": {
-         *   "conditions": null, // ignored
-         *   "conditions": [], // ignored
-         *   "equals": { "foo1": true  } // other conditions in simple form
+         *   "conditions": null, // null is ignored
+         *   // -or-
+         *   "conditions": [], // empty array does nothing
+         *   // -or-
+         *   "conditions": [ // mix of non-simple and simple form
+         *     { "equals": { "foo1": true  } }
+         *   ], 
+         *   // other conditions in simple form...
+         *   "equals": { "foo1": true  } 
          * }
          * 
          * "or": {
