@@ -1,8 +1,7 @@
 package com.neverpile.authorization.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,12 +19,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.neverpile.common.authorization.policy.AccessPolicy;
+import com.neverpile.common.authorization.policy.AccessRule;
 import com.neverpile.common.authorization.policy.Effect;
 import com.neverpile.common.condition.AndCondition;
 import com.neverpile.common.condition.Condition;
 import com.neverpile.common.condition.EqualsCondition;
 import com.neverpile.common.condition.ExistsCondition;
 import com.neverpile.common.condition.NotCondition;
+import com.neverpile.common.condition.OrCondition;
 
 @RunWith(SpringRunner.class)
 @JsonTest
@@ -43,7 +44,7 @@ public class PolicyPersistenceTest {
 
     assertThat(policy.getDefaultEffect()).isEqualTo(Effect.DENY);
     assertThat(policy.getDescription()).contains("some policy");
-    assertThat(policy.getValidFrom()).isCloseTo(Instant.ofEpochMilli(0),within(0, ChronoUnit.MILLIS));
+    assertThat(policy.getValidFrom()).isCloseTo(Instant.ofEpochMilli(0), within(0, ChronoUnit.MILLIS));
     assertThat(policy.getRules()).size().isEqualTo(8);
     assertThat(policy.getRules().get(0).getName()).isEqualTo("Superuser-permissions");
     assertThat(policy.getRules().get(0).getEffect()).isEqualTo(Effect.ALLOW);
@@ -73,6 +74,21 @@ public class PolicyPersistenceTest {
     notCondition.element(1).isInstanceOf(ExistsCondition.class);
   }
 
+  @Test
+  public void testThat_multipleNestedConditionsAreProperlyDeserialized() throws Exception {
+    AccessPolicy policy = (AccessPolicy) mapper.readValue(getClass().getResourceAsStream("non-simple-composite-condition.json"), AccessPolicy.class);
+
+    AccessRule rule = policy.getRules().stream().filter(r -> r.getName().equals("Test deserialization of or-condition")).findFirst().get();
+
+    // a single or
+    assertThat(rule.getConditions().getConditions()).hasSize(1);
+    assertThat(rule.getConditions().getConditions().get(0)).isInstanceOf(OrCondition.class);
+    
+    // or must contain thee equas
+    OrCondition or = (OrCondition) rule.getConditions().getConditions().get(0);
+    assertThat(or.getConditions()).hasSize(3);
+    assertThat(or.getConditions()).allMatch(c -> c instanceof EqualsCondition);
+  }
 
   @Test
   public void testThat_unrecognizedPropertyTypeIsRejected() throws Exception {

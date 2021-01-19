@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.neverpile.common.condition.CompositeCondition;
 import com.neverpile.common.condition.Condition;
 import com.neverpile.common.condition.CoreConditionRegistry;
+import com.neverpile.common.specifier.Specifier;
 
 /**
  * A Jackson {@link Module} extending Jackson with capabilities for the marshalling and
@@ -63,6 +65,12 @@ public class ConditionModule extends SimpleModule {
 
     setSerializerModifier(new ConditionSerializerModifier());
     setDeserializerModifier(new ConditionDeserializerModifier());
+    addKeySerializer(Specifier.class, new JsonSerializer<Specifier>() {
+      @Override
+      public void serialize(final Specifier value, final JsonGenerator gen, final SerializerProvider serializers) throws IOException {
+        gen.writeFieldName(value.asString());
+      }
+    });
   }
 
   @PostConstruct
@@ -89,14 +97,36 @@ public class ConditionModule extends SimpleModule {
         super.serializeFields(bean, gen, provider);
 
         CompositeCondition<?> dto = (CompositeCondition<?>) bean;
-        for (Condition c : dto.getConditions()) {
-          String name = conditionNameByClass.get(c.getClass());
-
-          if (null == name)
-            throw new IllegalArgumentException(
-                "Cannot serialize condition of type " + c.getClass() + ": name cannot be resolved");
-
-          provider.defaultSerializeField(name, c, gen);
+        
+        // determine whether we can serialize in simple form by looking at whether there would be duplicate keys
+        boolean canSerializeSimple = dto.getConditions().stream().map(c -> conditionNameByClass.get(c.getClass())).distinct().count()  // 
+            == dto.getConditions().size();
+        
+        if(canSerializeSimple) {
+          for (Condition c : dto.getConditions()) {
+            String name = conditionNameByClass.get(c.getClass());
+  
+            if (null == name)
+              throw new IllegalArgumentException(
+                  "Cannot serialize condition of type " + c.getClass() + ": name cannot be resolved");
+  
+            provider.defaultSerializeField(name, c, gen);
+          }
+        } else {
+          gen.writeFieldName("conditions");
+          gen.writeStartArray();
+          for (Condition c : dto.getConditions()) {
+            String name = conditionNameByClass.get(c.getClass());
+  
+            if (null == name)
+              throw new IllegalArgumentException(
+                  "Cannot serialize condition of type " + c.getClass() + ": name cannot be resolved");
+  
+            gen.writeStartObject();
+            provider.defaultSerializeField(name, c, gen);
+            gen.writeEndObject();
+          }
+          gen.writeEndArray();
         }
       }
     }
@@ -112,20 +142,20 @@ public class ConditionModule extends SimpleModule {
   }
 
   public class ConditionDeserializerModifier extends BeanDeserializerModifier {
+    
     public class CompositeConditionDeserializer extends BeanDeserializer {
       private static final long serialVersionUID = 1L;
 
       public CompositeConditionDeserializer(final BeanDeserializerBase base) {
         super(base);
-
+        
       }
 
-      @Override
-      protected void handleUnknownProperty(final JsonParser p, final DeserializationContext ctxt,
-          final Object beanOrClass, final String propName) throws IOException {
-        Class<? extends Condition> conditionClass = conditionClassByName.get(propName);
+      private void deserializeNamedCondition(final JsonParser p, final DeserializationContext ctxt, final Object beanOrClass, final String conditionName)
+          throws IOException {
+        Class<? extends Condition> conditionClass = conditionClassByName.get(conditionName);
         if (null == conditionClass)
-          throw UnrecognizedPropertyException.from(p, beanOrClass, propName,
+          throw UnrecognizedPropertyException.from(p, beanOrClass, conditionName,
               new ArrayList<>(conditionClassByName.keySet()));
         else {
           JavaType valueType = ctxt.getTypeFactory().constructType(conditionClass);
@@ -133,6 +163,109 @@ public class ConditionModule extends SimpleModule {
           Object value = deserializer.deserialize(p, ctxt);
           ((CompositeCondition<?>) beanOrClass).addCondition((Condition) value);
         }
+      }
+      
+      @Override
+      protected void handleUnknownProperty(final JsonParser p, final DeserializationContext ctxt,
+          final Object beanOrClass, final String propName) throws IOException {
+        deserializeNamedCondition(p, ctxt, beanOrClass, propName);
+      }
+
+      @Override
+      protected void handleIgnoredProperty(final JsonParser p, final DeserializationContext ctxt, final Object beanOrClass, final String propName) throws IOException {
+        /*
+         * Support conditions in an array named "conditions" for cases when the condition names are not unique.
+         * 
+         * The JSON must look like this:
+         * "or": {
+         *   "conditions": [  // We are here!
+         *     { "equals": { "foo1": true  } },
+         *     { "equals": { "foo2": true  } },
+         *     { "equals": { "foo3": true  } }
+         *   ]
+         * }
+         * 
+         * These are also acceptable:
+         * "or": {
+         *   "conditions": null, // null is ignored
+         *   // -or-
+         *   "conditions": [], // empty array does nothing
+         *   // -or-
+         *   "conditions": [ // mix of non-simple and simple form
+         *     { "equals": { "foo1": true  } }
+         *   ], 
+         *   // other conditions in simple form...
+         *   "equals": { "foo1": true  } 
+         * }
+         * 
+         * "or": {
+         *   "conditions": [
+         *     { 
+         *       "equals": { "foo1": true  }, // nested conditions with different name in one object entry  
+         *       "exists": { "target": "something" }  
+         *     }
+         *   ]
+         * }
+         */
+        if ("conditions".equals(propName)) {
+          JsonToken tok = p.currentToken();
+          switch (tok) {
+          case VALUE_NULL:
+            // ignore null value
+            return;
+
+          case START_ARRAY:
+            do {
+              tok = p.nextToken();
+              switch (tok) {
+              case END_ARRAY:
+                break; // end loop
+                
+              case START_OBJECT:
+                // each object must contain one or more conditions keyed by type
+                do {
+                  tok = p.nextToken();
+                  switch (tok) {
+                  case END_OBJECT:
+                    break; // end loop
+                    
+                  case FIELD_NAME:
+                    String conditionName = p.getCurrentName();
+                    
+                    // The deserializer for a named condition expects to be located
+                    // at the start object token.
+                    if(p.nextToken() != JsonToken.START_OBJECT) {
+                      ctxt.handleUnexpectedToken(beanOrClass.getClass(), p);
+                      break;
+                    }
+                    
+                    deserializeNamedCondition(p, ctxt, beanOrClass, conditionName);
+                    break;
+                    
+                  default:
+                    ctxt.handleUnexpectedToken(beanOrClass.getClass(), p);
+                    break;
+                  }
+                } while (tok != JsonToken.END_OBJECT);
+                break;
+                
+              default:
+                ctxt.handleUnexpectedToken(beanOrClass.getClass(), p);
+                break;
+              }
+            } while (tok != JsonToken.END_ARRAY);
+            break;
+            
+          default:
+            ctxt.handleUnexpectedToken(beanOrClass.getClass(), p);
+            break;
+          }
+          
+          return;
+        }
+        
+        // fail on all unknown properties
+        throw UnrecognizedPropertyException.from(p, beanOrClass, propName, getKnownPropertyNames());
       }
     }
 
