@@ -26,7 +26,8 @@
   </modules>
 
   <dependencyManagement>
-    <dependencies><!-- Spring-Boot -->
+    <dependencies>
+      <!-- Spring-Boot -->
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
