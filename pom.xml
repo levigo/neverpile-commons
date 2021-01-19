@@ -5,7 +5,7 @@
   <artifactId>neverpile-commons</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>neverpile-commons</name>
-  
+
   <packaging>pom</packaging>
 
   <properties>
@@ -51,6 +51,25 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.0.0</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+          <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
       </plugin>
     </plugins>
   </build>
