@@ -15,8 +15,15 @@ public class Permission {
     return new Permission(Effect.DENY, actionKeys);
   }
   
+  /**
+   * The action keys this permission affects. Permission keys may use namespacing as described in {@link Action}. They
+   * may also use the trailing wildcard <code>*</code>.
+   */
   private List<String> actionKeys = new ArrayList<>();
   
+  /**
+   * The effect to apply when one of the keys match.
+   */
   private Effect effect = Effect.DENY;
 
   public Permission() {

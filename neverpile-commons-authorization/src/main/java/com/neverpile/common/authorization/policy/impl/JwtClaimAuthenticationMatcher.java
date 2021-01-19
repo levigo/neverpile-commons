@@ -3,6 +3,7 @@ package com.neverpile.common.authorization.policy.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,24 +110,35 @@ public class JwtClaimAuthenticationMatcher implements AuthenticationMatcher {
     if (authentication instanceof JwtAuthenticationToken) {
       JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) authentication;
 
+      // expose all claims as variables
+      Map<String, Object> claims = jwtToken.getToken().getClaims();
+      EvaluationContext ctx = SimpleEvaluationContext //
+          .forPropertyAccessors(new NullForMissingEntryMapAccessor(), new ObjectNodeAccessor()) //
+          .withMethodResolvers(DataBindingMethodResolver.forInstanceMethodInvocation()) //
+          .withRootObject(claims) //
+          .build();
+      
+      LOGGER.debug("  Matching authentication against JWT claims {}", claims);
+      
       for (String subject : subjects) {
         if (subject.startsWith(SUBJECT_PREFIX)) {
-          Expression expression = parser.parseExpression(subject.substring(SUBJECT_PREFIX.length()));
-
-          // expose all claims as variables
-          EvaluationContext ctx = SimpleEvaluationContext //
-              .forPropertyAccessors(new NullForMissingEntryMapAccessor(), new ObjectNodeAccessor()) //
-              .withMethodResolvers(DataBindingMethodResolver.forInstanceMethodInvocation()) //
-              .withRootObject(jwtToken.getToken().getClaims()) //
-              .build();
+          String expressionAsString = subject.substring(SUBJECT_PREFIX.length());
+          Expression expression = parser.parseExpression(expressionAsString);
 
           try {
+            boolean outcome;
             Object result = expression.getValue(ctx, Object.class);
-            if (null == result)
-              return false;
-            if (result instanceof Boolean)
-              return (Boolean) result;
-            return true;
+            if (null == result) {
+              outcome = false;
+            } else  if (result instanceof Boolean) {
+              outcome = (Boolean) result;
+            } else {
+              outcome = true;
+            }
+            
+            LOGGER.debug("  The JWT claims {} the expression {}", outcome ? "SATISFY" : "do not satisfy", expressionAsString);
+            
+            return outcome;
           } catch (EvaluationException e) {
             LOGGER.warn("Failed to evaluate expression `{}`: {}", expression.getExpressionString(), e.getLocalizedMessage());
           }
