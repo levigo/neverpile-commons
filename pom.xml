@@ -13,7 +13,6 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.target>${java.version}</maven.compiler.target>
-
     <spring-boot.version>2.3.0.RELEASE</spring-boot.version>
   </properties>
 
