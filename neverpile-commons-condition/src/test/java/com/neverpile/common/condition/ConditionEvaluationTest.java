@@ -1,8 +1,7 @@
 package com.neverpile.common.condition;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
+import static java.util.Arrays.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.stream.Stream;
 
@@ -15,6 +14,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.neverpile.common.specifier.Specifier;
+
+import static org.mockito.BDDMockito.*;
 
 @RunWith(SpringRunner.class)
 @JsonTest
@@ -57,6 +58,28 @@ public class ConditionEvaluationTest {
     // negative match (no such value)
     equals.getPredicates().clear();
     equals.addPredicate("yada.yada", asList("yada!"));
+    assertThat(equals.matches(ctx)).isFalse();
+  }
+  
+  @Test
+  public void testThat_equalsConditionWithBooleanWorks() throws Exception {
+    given(ctx.resolveValue(Specifier.from("foo.aBoolean"))).willReturn(true);
+    given(ctx.resolveValue(Specifier.from("foo.aBooleanAsString"))).willReturn("true");
+    
+    EqualsCondition equals = new EqualsCondition();
+    
+    // positive match
+    equals.addPredicate("foo.aBoolean", asList(true));
+    assertThat(equals.matches(ctx)).isTrue();
+    
+    // negative match (non-matching value)
+    equals.getPredicates().clear();
+    equals.addPredicate("foo.aBoolean", asList(false));
+    assertThat(equals.matches(ctx)).isFalse();
+
+    // negative match (wrong type)
+    equals.getPredicates().clear();
+    equals.addPredicate("foo.aBooleanAsString", asList(true));
     assertThat(equals.matches(ctx)).isFalse();
   }
 
