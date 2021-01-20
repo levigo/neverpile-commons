@@ -56,7 +56,7 @@ public abstract class ComparisonCondition extends Condition {
    */
   @JsonAnySetter
   @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-  public void addPredicate(final String target, final List<String> values) {
+  public void addPredicate(final String target, final List<Object> values) {
     predicates.merge(Specifier.from(target), new ArrayList<>(values), (v1, v2) -> {
       v1.addAll(v2);
       return v1;
