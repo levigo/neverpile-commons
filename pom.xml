@@ -23,6 +23,7 @@
     <module>neverpile-commons-authorization</module>
     <module>neverpile-commons-util</module>
     <module>neverpile-commons-opentracing</module>
+    <module>neverpile-commons-actuator</module>
   </modules>
 
   <dependencyManagement>
