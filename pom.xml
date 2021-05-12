@@ -23,6 +23,7 @@
     <module>neverpile-commons-authorization</module>
     <module>neverpile-commons-util</module>
     <module>neverpile-commons-opentracing</module>
+    <module>neverpile-commons-actuator</module>
   </modules>
 
   <dependencyManagement>
@@ -70,6 +71,32 @@
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
           <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
           <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Build-Number>${git.build.number}</Build-Number>
+              <Build-Timestamp>${git.build.time}</Build-Timestamp>
+              
+              <Git-Hash>${git.commit.id.full}</Git-Hash>
+              <Git-Tags>${git.tags}</Git-Tags>
+
+              <Specification-Title>${specification.title}</Specification-Title>
+              <Specification-Vendor>${project.organization.name}</Specification-Vendor>
+              <Specification-Version>${specification.version}</Specification-Version>
+
+              <Implementation-Title>${project.groupId}</Implementation-Title>
+              <Implementation-Version>${git.build.version}</Implementation-Version>
+              <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+              <Implementation-URL>${project.organization.url}</Implementation-URL>
+              <Implementation-Artifact>${project.artifactId}</Implementation-Artifact>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
     </plugins>
