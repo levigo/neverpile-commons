@@ -18,8 +18,6 @@ import java.util.List;
  * The BufferInputStream is useful only in conjunction with at least two
  * threads: one that is reading data and another one which adds more data or
  * tells the stream that END_OF_STREAM has been reached.
- *
- * @author B022449
  */
 public class BufferInputStream extends InputStream implements Serializable {
   private static final long serialVersionUID = 3978146543239182128L;
