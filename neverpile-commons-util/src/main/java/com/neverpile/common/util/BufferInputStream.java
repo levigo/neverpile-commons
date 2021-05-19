@@ -20,7 +20,7 @@ import java.util.List;
  * tells the stream that END_OF_STREAM has been reached.
  */
 public class BufferInputStream extends InputStream implements Serializable {
-  private static final long serialVersionUID = 3978146543239182128L;
+  private static final long serialVersionUID = 1L;
 
   /**
    * A list of buffers which are "queued" for reading
