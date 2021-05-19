@@ -19,8 +19,7 @@ public class StreamUtil {
    * @param os
    * @throws IOException
    */
-  public static void copyStream(InputStream is, OutputStream os)
-      throws IOException {
+  public static void copyStream(InputStream is, OutputStream os) throws IOException {
     int read = 0;
     byte[] buffer = new byte[4096];
     while ((read = is.read(buffer)) > 0)
@@ -34,8 +33,7 @@ public class StreamUtil {
    * @param os
    * @throws IOException
    */
-  public static void copyAndClose(InputStream is, OutputStream os)
-      throws IOException {
+  public static void copyAndClose(InputStream is, OutputStream os) throws IOException {
     try {
       int read = 0;
       byte[] buffer = new byte[4096];

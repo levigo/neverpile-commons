@@ -24,15 +24,21 @@ import java.util.List;
 public class BufferInputStream extends InputStream implements Serializable {
   private static final long serialVersionUID = 3978146543239182128L;
 
-  /** A list of buffers which are "queued" for reading */
+  /**
+   * A list of buffers which are "queued" for reading
+   */
   private final List<byte[]> buffers = new LinkedList<byte[]>();
 
   private byte[] currentBuffer = null;
 
-  /** A read pointer into the current buffer */
+  /**
+   * A read pointer into the current buffer
+   */
   private int readCursor = -1;
 
-  /** A flag indicating whether more data is to be expected or not. */
+  /**
+   * A flag indicating whether more data is to be expected or not.
+   */
   private boolean noMoreData = false;
 
   /**
@@ -87,8 +93,8 @@ public class BufferInputStream extends InputStream implements Serializable {
    *
    * @return true if there was more data, false otherwise
    * @throws IOException if an exception was detected after the production of
-   *           input data has commenced; see
-   *           {@link #setIOException(IOException)}
+   *                     input data has commenced; see
+   *                     {@link #setIOException(IOException)}
    */
   private synchronized boolean fetchNextBuffer() throws IOException {
     // wait for more data to arrive

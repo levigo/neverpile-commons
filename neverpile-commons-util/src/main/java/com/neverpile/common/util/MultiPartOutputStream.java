@@ -21,114 +21,113 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 /* ================================================================ */
+
 /**
  * Handle a multipart MIME response.
- * 
+ *
  * @author Greg Wilkins
  * @author Jim Crossley
  */
 public class MultiPartOutputStream extends FilterOutputStream {
-	/* ------------------------------------------------------------ */
-	private static final String __CRLF = "\015\012";
-	private static final String __DASHDASH = "--";
+  /* ------------------------------------------------------------ */
+  private static final String __CRLF = "\015\012";
+  private static final String __DASHDASH = "--";
 
-	public static String MULTIPART_MIXED = "multipart/mixed";
-	public static String MULTIPART_X_MIXED_REPLACE = "multipart/x-mixed-replace";
+  public static String MULTIPART_MIXED = "multipart/mixed";
+  public static String MULTIPART_X_MIXED_REPLACE = "multipart/x-mixed-replace";
 
-	private final String boundary;
+  private final String boundary;
 
-	private enum State {
-		IDLE, IN_STREAM, CLOSED
-	}
+  private enum State {
+    IDLE, IN_STREAM, CLOSED
+  }
 
-	private State state = State.IDLE;
+  private State state = State.IDLE;
 
-	public MultiPartOutputStream(OutputStream os) throws IOException {
-		super(os);
-		boundary = "nvgcaa" + System.identityHashCode(this)
-				+ Long.toString(System.currentTimeMillis(), 36);
-	}
+  public MultiPartOutputStream(OutputStream os) throws IOException {
+    super(os);
+    boundary = "nvgcaa" + System.identityHashCode(this) + Long.toString(System.currentTimeMillis(), 36);
+  }
 
-	private byte[] makePartHeader(String contentType)
-			throws UnsupportedEncodingException {
-		return (__DASHDASH//
-				+ boundary //
-				+ __CRLF //
-				+ "Content-Type: " + contentType//
-				+ __CRLF + __CRLF).getBytes("iso8859-1");
-	}
+  private byte[] makePartHeader(String contentType) throws UnsupportedEncodingException {
+    return (__DASHDASH//
+        + boundary //
+        + __CRLF //
+        + "Content-Type: " + contentType//
+        + __CRLF + __CRLF).getBytes("iso8859-1");
+  }
 
-	private byte[] makePartTrailer() throws UnsupportedEncodingException {
-		return __CRLF.getBytes("iso8859-1");
-	}
+  private byte[] makePartTrailer() throws UnsupportedEncodingException {
+    return __CRLF.getBytes("iso8859-1");
+  }
 
-	private byte[] makeStreamTrailer() throws UnsupportedEncodingException {
-		return (__DASHDASH//
-				+ boundary //
-				+ __DASHDASH //
-		+ __CRLF).getBytes("iso8859-1")//
-		;
-	}
+  private byte[] makeStreamTrailer() throws UnsupportedEncodingException {
+    return (__DASHDASH//
+        + boundary //
+        + __DASHDASH //
+        + __CRLF).getBytes("iso8859-1")//
+        ;
+  }
 
-	@Override
-	public void write(int b) throws IOException {
-		if (state != State.IN_STREAM)
-			throw new IllegalStateException("Nicht in Stream-Modus");
+  @Override
+  public void write(int b) throws IOException {
+    if (state != State.IN_STREAM)
+      throw new IllegalStateException("Nicht in Stream-Modus");
 
-		super.write(b);
-	}
+    super.write(b);
+  }
 
-	@Override
-	public void write(byte[] b) throws IOException {
-		if (state != State.IN_STREAM)
-			throw new IllegalStateException("Nicht in Stream-Modus");
+  @Override
+  public void write(byte[] b) throws IOException {
+    if (state != State.IN_STREAM)
+      throw new IllegalStateException("Nicht in Stream-Modus");
 
-		super.write(b);
-	}
+    super.write(b);
+  }
 
-	public void next() throws IOException {
-		switch (state){
-			case IN_STREAM :
-				out.write(makePartTrailer());
-				// fall through
+  public void next() throws IOException {
+    switch (state){
+      case IN_STREAM:
+        out.write(makePartTrailer());
+        // fall through
 
-			case IDLE :
-				out.write(makePartHeader("application/octet-stream"));
-				break;
+      case IDLE:
+        out.write(makePartHeader("application/octet-stream"));
+        break;
 
-			case CLOSED :
-				throw new IllegalStateException("Bereits geschlossen");
-		}
+      case CLOSED:
+        throw new IllegalStateException("Bereits geschlossen");
+    }
 
-		state = State.IN_STREAM;
-	}
+    state = State.IN_STREAM;
+  }
 
-	@Override
-	public void close() throws IOException {
-		switch (state){
-			case IN_STREAM :
-				out.write(makePartTrailer());
-				// fall through
+  @Override
+  public void close() throws IOException {
+    switch (state){
+      case IN_STREAM:
+        out.write(makePartTrailer());
+        // fall through
 
-			case IDLE :
-				out.write(makeStreamTrailer());
-				break;
+      case IDLE:
+        out.write(makeStreamTrailer());
+        break;
 
-			case CLOSED :
-				throw new IllegalStateException("Bereits geschlossen");
-		}
+      case CLOSED:
+        throw new IllegalStateException("Bereits geschlossen");
+    }
 
-		state = State.CLOSED;
-		
-		super.close();
-	}
+    state = State.CLOSED;
 
-	public void append(InputStream is) throws IOException {
-		next();
-		StreamUtil.copyStream(is, this);
-	}
+    super.close();
+  }
 
-	public String getBoundary() {
-		return boundary;
-	}
+  public void append(InputStream is) throws IOException {
+    next();
+    StreamUtil.copyStream(is, this);
+  }
+
+  public String getBoundary() {
+    return boundary;
+  }
 }
