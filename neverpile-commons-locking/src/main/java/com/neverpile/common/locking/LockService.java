@@ -184,7 +184,7 @@ public interface LockService {
    * An exception indicating that a lock extension request failed, because the lock has not been
    * refreshed in time and has been acquired by a third party.
    */
-  @ResponseStatus(HttpStatus.GONE)
+  @ResponseStatus(code = HttpStatus.GONE, reason = "Lock has been acquired by other party")
   public class LockLostException extends Exception {
     private static final long serialVersionUID = 1L;
   }

@@ -1,9 +1,10 @@
 package com.neverpile.common.locking.rest;
 
 import java.security.Principal;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,29 +26,21 @@ import io.micrometer.core.annotation.Timed;
  * A REST resource for managing locks.
  */
 @RestController
-//@ConditionalOnWebApplication
+@ConditionalOnWebApplication
 @RequestMapping(
     path = "/api/v1/locks",
     produces = MediaType.APPLICATION_JSON_VALUE)
-//@ConditionalOnBean(LockService.class)
+@ConditionalOnBean(LockService.class)
 public class LockServiceResource {
   @Autowired
   private LockService lockService;
 
-  @GetMapping
-  @Timed(
-      description = "get lock status",
-      value = "fusion.lock.get")
-  public String foo() {
-    return "Hello";
-  }
-  
   @GetMapping("{scope}")
   @Timed(
       description = "get lock status",
       value = "fusion.lock.get")
-  public Optional<LockState> queryLock(@PathVariable("scope") final String scope) {
-    return lockService.queryLock(scope);
+  public LockState queryLock(@PathVariable("scope") final String scope) throws NotFoundException {
+    return lockService.queryLock(scope).orElseThrow(() -> new NotFoundException());
   }
 
   @PostMapping("{scope}")
