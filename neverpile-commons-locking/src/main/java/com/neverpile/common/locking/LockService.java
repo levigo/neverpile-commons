@@ -16,16 +16,14 @@ public interface LockService {
    */
   public class LockState {
     private String ownerId;
-    private String ownerName;
     private Instant validUntil;
 
     public LockState() {
     }
 
-    public LockState(String ownerId, String ownerName, Instant validUntil) {
+    public LockState(String ownerId, Instant validUntil) {
       super();
       this.ownerId = ownerId;
-      this.ownerName = ownerName;
       this.validUntil = validUntil;
     }
 
@@ -45,24 +43,6 @@ public interface LockService {
      */
     public void setOwnerId(String ownerId) {
       this.ownerId = ownerId;
-    }
-
-    /**
-     * Get the human-readable name of the current lock owner.
-     * 
-     * @return the owner name
-     */
-    public String getOwnerName() {
-      return ownerName;
-    }
-
-    /**
-     * Set the human-readable name of the current lock owner.
-     * 
-     * @param ownerName the owner name
-     */
-    public void setOwnerName(String ownerName) {
-      this.ownerName = ownerName;
     }
 
     /**
@@ -88,7 +68,6 @@ public interface LockService {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((ownerId == null) ? 0 : ownerId.hashCode());
-      result = prime * result + ((ownerName == null) ? 0 : ownerName.hashCode());
       result = prime * result + ((validUntil == null) ? 0 : validUntil.hashCode());
       return result;
     }
@@ -102,7 +81,7 @@ public interface LockService {
       if (getClass() != obj.getClass())
         return false;
       LockState other = (LockState) obj;
-      return Objects.equals(other.ownerId, ownerId) && Objects.equals(other.ownerName, ownerName)
+      return Objects.equals(other.ownerId, ownerId)
           && Objects.equals(other.validUntil, validUntil);
     }
   }
@@ -194,10 +173,9 @@ public interface LockService {
    * 
    * @param scope the lock scope
    * @param ownerId the id of the prospective lock owner
-   * @param ownerName the human-readable name of the prospective lock owner
    * @return the LockRequestResult
    */
-  LockRequestResult tryAcquireLock(String scope, String ownerId, String ownerName);
+  LockRequestResult tryAcquireLock(String scope, String ownerId);
 
   /**
    * Extend the validity of a lock.

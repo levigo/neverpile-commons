@@ -60,7 +60,7 @@ public class LockServiceResource {
     if (null == ownerName && null != principal)
       ownerName = principal.toString();
 
-    LockRequestResult result = lockService.tryAcquireLock(scope, ownerId, ownerName);
+    LockRequestResult result = lockService.tryAcquireLock(scope, ownerId);
     if(!result.isSuccess()) {
       throw new ConflictException();
     }

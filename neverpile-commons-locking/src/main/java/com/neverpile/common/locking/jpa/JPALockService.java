@@ -25,7 +25,7 @@ import com.neverpile.common.locking.LockingConfiguration;
  * environment and the property <code>neverpile.locking.jpa.enabled</code> must be set to
  * <code>true</code>.
  * <p>
- *  The implementation will contribute the {@link LockStateEntity} to JPA
+ * The implementation will contribute the {@link LockStateEntity} to JPA
  */
 @Service
 @ConditionalOnProperty(
@@ -46,7 +46,7 @@ public class JPALockService implements LockService {
   private AtomicLong nextHousekeeping = new AtomicLong();
 
   @Override
-  public LockRequestResult tryAcquireLock(String scope, String ownerId, String ownerName) {
+  public LockRequestResult tryAcquireLock(String scope, String ownerId) {
     performHousekeeping();
 
     Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
@@ -57,20 +57,18 @@ public class JPALockService implements LockService {
       if (Objects.equals(lse.getOwnerId(), ownerId) || lse.getValidUntil().isBefore(Instant.now())) {
         lockStateRepository.delete(lse);
       } else {
-        return new LockRequestResult(false, null,
-            new LockState(lse.getOwnerId(), lse.getOwnerName(), lse.getValidUntil()));
+        return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
       }
     }
 
     // prepare new lock
     String token = UUID.randomUUID().toString();
-    LockState state = new LockState(ownerId, ownerName, Instant.now().plus(lockingConfiguration.getValidityDuration()));
+    LockState state = new LockState(ownerId, Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
     LockStateEntity lse = new LockStateEntity();
     lse.setScope(scope);
     lse.setLockToken(token);
     lse.setOwnerId(ownerId);
-    lse.setOwnerName(ownerName);
     lse.setValidUntil(state.getValidUntil());
 
     // persist lock
@@ -79,12 +77,12 @@ public class JPALockService implements LockService {
     } catch (EntityExistsException e) {
       // late lock collision - report as fail
       LockRequestResult failure = new LockRequestResult(false, null,
-          new LockState(lse.getOwnerId(), lse.getOwnerName(), lse.getValidUntil()));
+          new LockState(lse.getOwnerId(), lse.getValidUntil()));
 
       // still try to tell the requester who owns the lock
       try {
-        lockStateRepository.findById(scope).ifPresent(existingLse -> failure.setState(
-            new LockState(existingLse.getOwnerId(), existingLse.getOwnerName(), existingLse.getValidUntil())));
+        lockStateRepository.findById(scope).ifPresent(
+            existingLse -> failure.setState(new LockState(existingLse.getOwnerId(), existingLse.getValidUntil())));
       } catch (PersistenceException f) {
         // ignore exceptions during this phase
         LOGGER.warn("Can't report actual owner on late collision", f);
@@ -109,7 +107,7 @@ public class JPALockService implements LockService {
         try {
           lockStateRepository.save(lse);
 
-          return new LockState(lse.getOwnerId(), lse.getOwnerName(), lse.getValidUntil());
+          return new LockState(lse.getOwnerId(), lse.getValidUntil());
         } catch (EntityExistsException e) {
           // late lock collision - report as fail (fall out)
         }
@@ -135,7 +133,7 @@ public class JPALockService implements LockService {
   @Override
   public Optional<LockState> queryLock(String scope) {
     return lockStateRepository.findById(scope).map(
-        lse -> new LockService.LockState(lse.getOwnerId(), lse.getOwnerName(), lse.getValidUntil()));
+        lse -> new LockService.LockState(lse.getOwnerId(), lse.getValidUntil()));
   }
 
   /**

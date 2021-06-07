@@ -58,7 +58,7 @@ public class LockServiceTest {
     
     BDDMockito
       .given(mockLockService.queryLock(any()))
-      .willReturn(Optional.of(new LockState("anOwnerId", "anOwnerName", anInstant)));
+      .willReturn(Optional.of(new LockState("anOwnerId", anInstant)));
     
     // query existing lock
     LockState res = RestAssured.given()
@@ -73,7 +73,6 @@ public class LockServiceTest {
       .extract().as(LockState.class);
     
     assertThat(res.getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(res.getOwnerName()).isEqualTo("anOwnerName");
     assertThat(res.getValidUntil()).isEqualTo(anInstant);
     // @formatter:on
   }
@@ -107,8 +106,8 @@ public class LockServiceTest {
     Instant anInstant = Instant.now();
     
     BDDMockito
-      .given(mockLockService.tryAcquireLock(scopeC.capture(), ownerIdC.capture(), ownerNameC.capture()))
-      .willReturn(new LockRequestResult(true, "aToken", new LockState("anOwnerId", "anOwnerName", anInstant)));
+      .given(mockLockService.tryAcquireLock(scopeC.capture(), ownerIdC.capture()))
+      .willReturn(new LockRequestResult(true, "aToken", new LockState("anOwnerId", anInstant)));
     
     LockRequestResult res = RestAssured.given()
       .accept(ContentType.JSON)
@@ -126,7 +125,6 @@ public class LockServiceTest {
     assertThat(res.getToken()).isEqualTo("aToken");
     assertThat(res.isSuccess()).isTrue();
     assertThat(res.getState().getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(res.getState().getOwnerName()).isEqualTo("anOwnerName");
     assertThat(res.getState().getValidUntil()).isEqualTo(anInstant);
     
     assertThat(scopeC.getValue()).isEqualTo("aScope");
@@ -139,7 +137,7 @@ public class LockServiceTest {
   public void testThat_lockConflictIsSignalled() throws Exception {
     // @formatter:off
     BDDMockito
-      .given(mockLockService.tryAcquireLock(any(), any(), any()))
+      .given(mockLockService.tryAcquireLock(any(), any()))
       .willReturn(new LockRequestResult(false, "aToken", null));
     
     // store collection
@@ -166,7 +164,7 @@ public class LockServiceTest {
 
     BDDMockito
       .given(mockLockService.extendLock(scopeC.capture(), tokenC.capture()))
-      .willReturn(new LockState("anOwnerId", "anOwnerName", anInstant));
+      .willReturn(new LockState("anOwnerId", anInstant));
     
     LockState res = RestAssured.given()
       .accept(ContentType.JSON)
@@ -180,7 +178,6 @@ public class LockServiceTest {
       .extract().as(LockState.class);
     
     assertThat(res.getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(res.getOwnerName()).isEqualTo("anOwnerName");
     assertThat(res.getValidUntil()).isEqualTo(anInstant);
     
     assertThat(scopeC.getValue()).isEqualTo("aScope");

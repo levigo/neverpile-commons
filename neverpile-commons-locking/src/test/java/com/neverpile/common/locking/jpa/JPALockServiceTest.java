@@ -48,13 +48,12 @@ public class JPALockServiceTest {
   public void testThat_lockCanBeAcquired() {
     Instant start = Instant.now();
 
-    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId", "anOwner");
+    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
     assertThat(result.isSuccess()).isTrue();
     assertThat(result.getState().getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(result.getState().getOwnerName()).isEqualTo("anOwner");
     assertThat(result.getState().getValidUntil()).isAfter(start);
     assertThat(result.getState().getValidUntil()).isBefore(Instant.now().plusSeconds(60)); // default
                                                                                            // validity
@@ -65,13 +64,12 @@ public class JPALockServiceTest {
     LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
 
     assertThat(entry.getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(entry.getOwnerName()).isEqualTo("anOwner");
     assertThat(entry.getLockToken()).isEqualTo(result.getToken());
   }
 
   @Test
   public void testThat_lockCanBeReleased() {
-    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId", "anOwner");
+    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
@@ -86,7 +84,7 @@ public class JPALockServiceTest {
 
   @Test
   public void testThat_lockCanBeExtended() throws LockLostException, InterruptedException {
-    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId", "anOwner");
+    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
@@ -107,25 +105,24 @@ public class JPALockServiceTest {
 
   @Test
   public void testThat_lockCanBeQueried() throws LockLostException, InterruptedException {
-    LockRequestResult acquired = lockService.tryAcquireLock("dummy", "anOwnerId", "anOwner");
+    LockRequestResult acquired = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
     Optional<LockState> lock = lockService.queryLock("dummy");
     assertThat(lock).isPresent();
     assertThat(lock.get().getOwnerId()).isEqualTo("anOwnerId");
-    assertThat(lock.get().getOwnerName()).isEqualTo("anOwner");
     assertThat(lock.get().getValidUntil()).isEqualTo(acquired.getState().getValidUntil());
   }
 
   @Test
   public void testThat_acquisitionFailsOnCollision() {
-    lockService.tryAcquireLock("dummy", "anotherOwnerId", "anotherOwner");
+    lockService.tryAcquireLock("dummy", "anotherOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
     TestTransaction.start();
-    LockRequestResult fail = lockService.tryAcquireLock("dummy", "anOwnerId", "anOwner");
+    LockRequestResult fail = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.end();
 
     assertThat(fail.isSuccess()).isFalse();
@@ -133,7 +130,7 @@ public class JPALockServiceTest {
 
   @Test
   public void testThat_cannotReleaseForeignLock() {
-    lockService.tryAcquireLock("dummy", "anotherOwnerId", "anotherOwner");
+    lockService.tryAcquireLock("dummy", "anotherOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
@@ -148,7 +145,7 @@ public class JPALockServiceTest {
 
   @Test
   public void testThat_cannotExtendForeignLock() {
-    lockService.tryAcquireLock("dummy", "anotherOwnerId", "anotherOwner");
+    lockService.tryAcquireLock("dummy", "anotherOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
@@ -157,14 +154,14 @@ public class JPALockServiceTest {
 
   @Test
   public void testThat_housekeepingCleansOldLocks() throws InterruptedException {
-    lockService.tryAcquireLock("dummy1", "anotherOwnerId", "anotherOwner");
+    lockService.tryAcquireLock("dummy1", "anotherOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
     Thread.sleep(7000);
 
     TestTransaction.start();
-    lockService.tryAcquireLock("dummy2", "anotherOwnerId", "anotherOwner");
+    lockService.tryAcquireLock("dummy2", "anotherOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 

@@ -18,8 +18,6 @@ public class LockStateEntity {
 
   private String ownerId;
 
-  private String ownerName;
-
   private Instant validUntil;
 
   private String lockToken;
@@ -38,14 +36,6 @@ public class LockStateEntity {
 
   public void setOwnerId(String ownerId) {
     this.ownerId = ownerId;
-  }
-
-  public String getOwnerName() {
-    return ownerName;
-  }
-
-  public void setOwnerName(String ownerName) {
-    this.ownerName = ownerName;
   }
 
   public Instant getValidUntil() {
