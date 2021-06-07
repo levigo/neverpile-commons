@@ -34,7 +34,7 @@ import com.neverpile.common.locking.LockingConfiguration;
         "neverpile.locking.jpa.enabled=true",
         "neverpile.locking.validity-duration=PT5S"
     })
-public class JPACollectionServiceTest {
+public class JPALockServiceTest {
   @Autowired
   private JPALockService lockService;
 

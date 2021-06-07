@@ -7,13 +7,12 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,8 @@ import com.neverpile.common.locking.LockingConfiguration;
 @ConditionalOnProperty(
     name = "neverpile.locking.jpa.enabled",
     havingValue = "true")
-@ConditionalOnBean(EntityManager.class)
+@ConditionalOnClass(
+    name = "javax.persistence.EntityManager")
 @ComponentScan
 public class JPALockService implements LockService {
   private static final Logger LOGGER = LoggerFactory.getLogger(JPALockService.class);
