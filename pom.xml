@@ -24,6 +24,7 @@
     <module>neverpile-commons-util</module>
     <module>neverpile-commons-opentracing</module>
     <module>neverpile-commons-actuator</module>
+    <module>neverpile-commons-locking</module>
   </modules>
 
   <dependencyManagement>
