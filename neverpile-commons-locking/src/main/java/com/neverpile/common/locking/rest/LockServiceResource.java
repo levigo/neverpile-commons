@@ -4,8 +4,6 @@ import java.security.Principal;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,11 +25,11 @@ import io.micrometer.core.annotation.Timed;
  * A REST resource for managing locks.
  */
 @RestController
-@ConditionalOnWebApplication
+//@ConditionalOnWebApplication
 @RequestMapping(
-    path = "/api/v1/locks/{scope}",
+    path = "/api/v1/locks",
     produces = MediaType.APPLICATION_JSON_VALUE)
-@ConditionalOnBean(LockService.class)
+//@ConditionalOnBean(LockService.class)
 public class LockServiceResource {
   @Autowired
   private LockService lockService;
@@ -40,11 +38,19 @@ public class LockServiceResource {
   @Timed(
       description = "get lock status",
       value = "fusion.lock.get")
+  public String foo() {
+    return "Hello";
+  }
+  
+  @GetMapping("{scope}")
+  @Timed(
+      description = "get lock status",
+      value = "fusion.lock.get")
   public Optional<LockState> queryLock(@PathVariable("scope") final String scope) {
     return lockService.queryLock(scope);
   }
 
-  @PostMapping
+  @PostMapping("{scope}")
   @Timed(
       description = "try to acquire a lock",
       value = "fusion.lock.acquire")
@@ -69,7 +75,7 @@ public class LockServiceResource {
     return result;
   }
 
-  @PutMapping
+  @PutMapping("{scope}")
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
@@ -78,7 +84,7 @@ public class LockServiceResource {
     return lockService.extendLock(scope, token);
   }
 
-  @DeleteMapping
+  @DeleteMapping("{scope}")
   @Timed(
       description = "release a lock",
       value = "fusion.lock.release")

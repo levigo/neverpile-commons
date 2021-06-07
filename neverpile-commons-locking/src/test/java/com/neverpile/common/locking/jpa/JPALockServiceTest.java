@@ -2,7 +2,6 @@ package com.neverpile.common.locking.jpa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.transaction.TestTransaction;
@@ -37,9 +35,6 @@ import com.neverpile.common.locking.LockingConfiguration;
 public class JPALockServiceTest {
   @Autowired
   private JPALockService lockService;
-
-  @MockBean
-  private Clock clock;
 
   @Autowired
   private LockStateRepository repository;
