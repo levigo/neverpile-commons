@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,7 +29,7 @@ import io.micrometer.core.annotation.Timed;
 @RestController
 @ConditionalOnWebApplication
 @RequestMapping(
-    path = "/api/v1/locks/{target}",
+    path = "/api/v1/locks/{scope}",
     produces = MediaType.APPLICATION_JSON_VALUE)
 @ConditionalOnBean(LockService.class)
 public class LockServiceResource {
@@ -39,43 +40,49 @@ public class LockServiceResource {
   @Timed(
       description = "get lock status",
       value = "fusion.lock.get")
-  public Optional<LockState> queryLock(@PathVariable("target") final String target) {
-    return lockService.queryLock(target);
+  public Optional<LockState> queryLock(@PathVariable("scope") final String scope) {
+    return lockService.queryLock(scope);
   }
 
-  @PutMapping
+  @PostMapping
   @Timed(
       description = "try to acquire a lock",
       value = "fusion.lock.acquire")
-  public LockRequestResult tryAcquireLock(@PathVariable("target") final String target, final Principal principal,
+  public LockRequestResult tryAcquireLock(@PathVariable("scope") final String scope, final Principal principal,
       @RequestParam(
           name = "ownerId",
           required = false) String ownerId,
       @RequestParam(
           name = "ownerName",
-          required = false) String ownerName) {
+          required = false) String ownerName) throws ConflictException {
     // derive owner id and name from principal if not explicitly set
     if (null == ownerId && null != principal)
       ownerId = principal.getName();
     if (null == ownerName && null != principal)
       ownerName = principal.toString();
 
-    return lockService.tryAcquireLock(target, ownerId, ownerName);
+    LockRequestResult result = lockService.tryAcquireLock(scope, ownerId, ownerName);
+    if(!result.isSuccess()) {
+      throw new ConflictException();
+    }
+       
+    return result;
   }
 
   @PutMapping
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
-  public LockState extendLock(@PathVariable("target") final String target, @RequestParam("token") String token) throws LockLostException {
-    return lockService.extendLock(target, token);
+  public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam("token") String token)
+      throws LockLostException {
+    return lockService.extendLock(scope, token);
   }
 
   @DeleteMapping
   @Timed(
       description = "release a lock",
       value = "fusion.lock.release")
-  public void release(@PathVariable("target") final String target, @RequestParam("token") String token) {
-    lockService.releaseLock(target, token);
+  public void release(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
+    lockService.releaseLock(scope, token);
   }
 }

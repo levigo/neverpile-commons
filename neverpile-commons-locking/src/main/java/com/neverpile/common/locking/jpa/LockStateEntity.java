@@ -14,7 +14,7 @@ import javax.persistence.Table;
     name = "locks")
 public class LockStateEntity {
   @Id
-  private String lockTarget;
+  private String scope;
 
   private String ownerId;
 
@@ -24,12 +24,12 @@ public class LockStateEntity {
 
   private String lockToken;
 
-  public String getLockTarget() {
-    return lockTarget;
+  public String getScope() {
+    return scope;
   }
 
-  public void setLockTarget(String lockTarget) {
-    this.lockTarget = lockTarget;
+  public void setScope(String lockTarget) {
+    this.scope = lockTarget;
   }
 
   public String getOwnerId() {

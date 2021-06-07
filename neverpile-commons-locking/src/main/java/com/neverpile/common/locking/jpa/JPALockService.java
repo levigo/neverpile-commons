@@ -67,7 +67,7 @@ public class JPALockService implements LockService {
     LockState state = new LockState(ownerId, ownerName, Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
     LockStateEntity lse = new LockStateEntity();
-    lse.setLockTarget(scope);
+    lse.setScope(scope);
     lse.setLockToken(token);
     lse.setOwnerId(ownerId);
     lse.setOwnerName(ownerName);
