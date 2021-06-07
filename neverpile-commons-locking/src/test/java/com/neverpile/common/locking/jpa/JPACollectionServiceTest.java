@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -28,7 +29,11 @@ import com.neverpile.common.locking.LockingConfiguration;
     classes = {
         JPALockService.class, LockingConfiguration.class
     })
-@TestPropertySource(properties = {"neverpile.locking.jpa.enabled=true"})
+@TestPropertySource(
+    properties = {
+        "neverpile.locking.jpa.enabled=true",
+        "neverpile.locking.validity-duration=PT5S"
+    })
 public class JPACollectionServiceTest {
   @Autowired
   private JPALockService lockService;
@@ -38,7 +43,7 @@ public class JPACollectionServiceTest {
 
   @Autowired
   private LockStateRepository repository;
-  
+
   @AfterEach
   public void cleanup() {
     repository.deleteAll();
@@ -142,16 +147,33 @@ public class JPACollectionServiceTest {
     lockService.releaseLock("dummy", "whateverToken");
     TestTransaction.flagForCommit();
     TestTransaction.end();
-    
+
     assertThat(repository.findById("dummy")).isPresent();
   }
-  
+
   @Test
   public void testThat_cannotExtendForeignLock() {
     lockService.tryAcquireLock("dummy", "anotherOwnerId", "anotherOwner");
     TestTransaction.flagForCommit();
     TestTransaction.end();
-    
+
     Assertions.assertThrows(LockLostException.class, () -> lockService.extendLock("dummy", "whateverToken"));
+  }
+
+  @Test
+  public void testThat_housekeepingCleansOldLocks() throws InterruptedException {
+    lockService.tryAcquireLock("dummy1", "anotherOwnerId", "anotherOwner");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    Thread.sleep(7000);
+
+    TestTransaction.start();
+    lockService.tryAcquireLock("dummy2", "anotherOwnerId", "anotherOwner");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    // dummy1 must be expired
+    assertThat(StreamSupport.stream(repository.findAll().spliterator(), false).count()).isEqualTo(1);
   }
 }

@@ -6,20 +6,24 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * An entity representing a lock's state.
+ */
 @Entity
-@Table(name = "locks")
+@Table(
+    name = "locks")
 public class LockStateEntity {
   @Id
   private String lockTarget;
-  
+
   private String ownerId;
-  
+
   private String ownerName;
-  
+
   private Instant validUntil;
-  
+
   private String lockToken;
-  
+
   public String getLockTarget() {
     return lockTarget;
   }
@@ -27,7 +31,7 @@ public class LockStateEntity {
   public void setLockTarget(String lockTarget) {
     this.lockTarget = lockTarget;
   }
-  
+
   public String getOwnerId() {
     return ownerId;
   }

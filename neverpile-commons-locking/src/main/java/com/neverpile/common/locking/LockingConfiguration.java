@@ -28,16 +28,16 @@ public class LockingConfiguration {
   /**
    * The duration of the validity of an acquired lock. Default: one minute.
    */
-  private Duration lockValidity = Duration.ofMinutes(1);
+  private Duration validityDuration = Duration.ofMinutes(1);
   
   private Jpa jpa = new Jpa();
   
-  public Duration getLockValidity() {
-    return lockValidity;
+  public Duration getValidityDuration() {
+    return validityDuration;
   }
 
-  public void setLockValidity(Duration lockValidity) {
-    this.lockValidity = lockValidity;
+  public void setValidityDuration(Duration lockValidity) {
+    this.validityDuration = lockValidity;
   }
 
   public Jpa getJpa() {

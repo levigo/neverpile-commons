@@ -7,12 +7,13 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityExistsException;
+import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,18 @@ import org.springframework.stereotype.Service;
 import com.neverpile.common.locking.LockService;
 import com.neverpile.common.locking.LockingConfiguration;
 
+/**
+ * A JPA-based implementation of {@link LockService}. To enable it, JPA must be configured in the
+ * environment and the property <code>neverpile.locking.jpa.enabled</code> must be set to
+ * <code>true</code>.
+ * <p>
+ *  The implementation will contribute the {@link LockStateEntity} to JPA
+ */
 @Service
-@ConditionalOnClass(
-    name = "javax.persistence.EntityManager")
 @ConditionalOnProperty(
     name = "neverpile.locking.jpa.enabled",
     havingValue = "true")
+@ConditionalOnBean(EntityManager.class)
 @ComponentScan
 public class JPALockService implements LockService {
   private static final Logger LOGGER = LoggerFactory.getLogger(JPALockService.class);
@@ -39,10 +46,10 @@ public class JPALockService implements LockService {
   private AtomicLong nextHousekeeping = new AtomicLong();
 
   @Override
-  public LockRequestResult tryAcquireLock(String lockTarget, String ownerId, String ownerName) {
+  public LockRequestResult tryAcquireLock(String scope, String ownerId, String ownerName) {
     performHousekeeping();
 
-    Optional<LockStateEntity> existing = lockStateRepository.findById(lockTarget);
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 
     // Existing lock owned by requester? Just extend it. Expired? Delete existing lock.
     if (existing.isPresent()) {
@@ -57,10 +64,10 @@ public class JPALockService implements LockService {
 
     // prepare new lock
     String token = UUID.randomUUID().toString();
-    LockState state = new LockState(ownerId, ownerName, Instant.now().plus(lockingConfiguration.getLockValidity()));
+    LockState state = new LockState(ownerId, ownerName, Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
     LockStateEntity lse = new LockStateEntity();
-    lse.setLockTarget(lockTarget);
+    lse.setLockTarget(scope);
     lse.setLockToken(token);
     lse.setOwnerId(ownerId);
     lse.setOwnerName(ownerName);
@@ -76,7 +83,7 @@ public class JPALockService implements LockService {
 
       // still try to tell the requester who owns the lock
       try {
-        lockStateRepository.findById(lockTarget).ifPresent(existingLse -> failure.setState(
+        lockStateRepository.findById(scope).ifPresent(existingLse -> failure.setState(
             new LockState(existingLse.getOwnerId(), existingLse.getOwnerName(), existingLse.getValidUntil())));
       } catch (PersistenceException f) {
         // ignore exceptions during this phase
@@ -90,13 +97,13 @@ public class JPALockService implements LockService {
   }
 
   @Override
-  public LockState extendLock(String lockTarget, String token) throws LockLostException {
-    Optional<LockStateEntity> existing = lockStateRepository.findById(lockTarget);
+  public LockState extendLock(String scope, String token) throws LockLostException {
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 
     if (existing.isPresent()) {
       LockStateEntity lse = existing.get();
       if (Objects.equals(lse.getLockToken(), token)) {
-        lse.setValidUntil(Instant.now().plus(lockingConfiguration.getLockValidity()));
+        lse.setValidUntil(Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
         // persist updated lock
         try {
@@ -113,8 +120,8 @@ public class JPALockService implements LockService {
   }
 
   @Override
-  public void releaseLock(String lockTarget, String token) {
-    Optional<LockStateEntity> existing = lockStateRepository.findById(lockTarget);
+  public void releaseLock(String scope, String token) {
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
     if (existing.isPresent()) {
       LockStateEntity lse = existing.get();
       if (Objects.equals(lse.getLockToken(), token)) {
@@ -126,8 +133,8 @@ public class JPALockService implements LockService {
   }
 
   @Override
-  public Optional<LockState> queryLock(String lockTarget) {
-    return lockStateRepository.findById(lockTarget).map(
+  public Optional<LockState> queryLock(String scope) {
+    return lockStateRepository.findById(scope).map(
         lse -> new LockService.LockState(lse.getOwnerId(), lse.getOwnerName(), lse.getValidUntil()));
   }
 
@@ -137,11 +144,12 @@ public class JPALockService implements LockService {
   private void performHousekeeping() {
     long nextRun = nextHousekeeping.get();
     Instant now = Instant.now();
-    if (nextRun < now.toEpochMilli()
-        && nextHousekeeping.compareAndSet(nextRun, now.plus(lockingConfiguration.getLockValidity()).toEpochMilli())) {
-      lockStateRepository.deleteByValidUntilBefore(now.minus(lockingConfiguration.getLockValidity())
-          // small grace period
-          .minusSeconds(10));
+    if (nextRun < now.toEpochMilli() && nextHousekeeping.compareAndSet(nextRun,
+        now.plus(lockingConfiguration.getValidityDuration()).toEpochMilli())) {
+      // small grace period
+      Instant deleteBefore = now.minusSeconds(1);
+      LOGGER.debug("Running housekeeping, deleting locks expired before {}", deleteBefore);
+      lockStateRepository.deleteByValidUntilBefore(deleteBefore);
     }
   }
 }
