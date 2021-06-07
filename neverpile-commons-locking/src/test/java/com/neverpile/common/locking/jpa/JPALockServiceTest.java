@@ -29,8 +29,7 @@ import com.neverpile.common.locking.LockingConfiguration;
     })
 @TestPropertySource(
     properties = {
-        "neverpile.locking.jpa.enabled=true",
-        "neverpile.locking.validity-duration=PT5S"
+        "neverpile.locking.jpa.enabled=true", "neverpile.locking.validity-duration=PT3S"
     })
 public class JPALockServiceTest {
   @Autowired
@@ -68,6 +67,26 @@ public class JPALockServiceTest {
   }
 
   @Test
+  public void testThat_lockCanBeAcquiredAfterExpiry() throws InterruptedException {
+    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result.isSuccess()).isTrue();
+    
+    Thread.sleep(5000);
+    // lock will be expired by now!
+    
+    TestTransaction.start();
+    result = lockService.tryAcquireLock("dummy", "anotherOwnerId"); // different owner!
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+    
+    assertThat(result.isSuccess()).isTrue();
+    assertThat(result.getState().getOwnerId()).isEqualTo("anotherOwnerId");
+  }
+  
+  @Test
   public void testThat_lockCanBeReleased() {
     LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
@@ -91,7 +110,29 @@ public class JPALockServiceTest {
     Thread.sleep(1000);
 
     TestTransaction.start();
-    LockState extended = lockService.extendLock("dummy", result.getToken());
+    LockState extended = lockService.extendLock("dummy", result.getToken(), "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    // verify extension
+    assertThat(extended.getValidUntil()).isAfter(result.getState().getValidUntil().plusMillis(500));
+
+    // verify repository contents
+    assertThat(repository.findById("dummy").orElseThrow(
+        () -> new AssertionError("lock not present")).getValidUntil()).isEqualTo(extended.getValidUntil());
+  }
+  
+  @Test
+  public void testThat_lockCanBeExtendedWithSilentReAcquire() throws LockLostException, InterruptedException {
+    LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    Thread.sleep(5000);
+    // lock will be expired by now!
+
+    TestTransaction.start();
+    LockState extended = lockService.extendLock("dummy", result.getToken(), "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
@@ -149,7 +190,8 @@ public class JPALockServiceTest {
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
-    Assertions.assertThrows(LockLostException.class, () -> lockService.extendLock("dummy", "whateverToken"));
+    Assertions.assertThrows(LockLostException.class,
+        () -> lockService.extendLock("dummy", "whateverToken", "anOwnerId"));
   }
 
   @Test
@@ -158,7 +200,7 @@ public class JPALockServiceTest {
     TestTransaction.flagForCommit();
     TestTransaction.end();
 
-    Thread.sleep(7000);
+    Thread.sleep(5000);
 
     TestTransaction.start();
     lockService.tryAcquireLock("dummy2", "anotherOwnerId");

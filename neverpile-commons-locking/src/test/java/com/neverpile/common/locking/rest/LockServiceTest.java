@@ -101,7 +101,6 @@ public class LockServiceTest {
     // @formatter:off
     ArgumentCaptor<String> scopeC = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> ownerIdC = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> ownerNameC = ArgumentCaptor.forClass(String.class);
 
     Instant anInstant = Instant.now();
     
@@ -129,7 +128,6 @@ public class LockServiceTest {
     
     assertThat(scopeC.getValue()).isEqualTo("aScope");
     assertThat(ownerIdC.getValue()).isEqualTo("anOwnerId");
-    assertThat(ownerNameC.getValue()).isEqualTo("anOwnerName");
     // @formatter:on
   }
 
@@ -144,7 +142,6 @@ public class LockServiceTest {
     RestAssured.given()
         .accept(ContentType.JSON)
         .param("ownerId", "anOwnerId")
-        .param("ownerName", "anOwnerName")
       .when()
         .log().all()
         .post("/api/v1/locks/aScope")
@@ -159,16 +156,18 @@ public class LockServiceTest {
     // @formatter:off
     ArgumentCaptor<String> scopeC = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> tokenC = ArgumentCaptor.forClass(String.class);
-    
+    ArgumentCaptor<String> ownerIdC = ArgumentCaptor.forClass(String.class);
+
     Instant anInstant = Instant.now();
 
     BDDMockito
-      .given(mockLockService.extendLock(scopeC.capture(), tokenC.capture()))
+      .given(mockLockService.extendLock(scopeC.capture(), tokenC.capture(), ownerIdC.capture()))
       .willReturn(new LockState("anOwnerId", anInstant));
     
     LockState res = RestAssured.given()
       .accept(ContentType.JSON)
       .param("token", "aToken")
+      .param("ownerId", "anOwnerId")
     .when()
       .log().all()
       .put("/api/v1/locks/aScope")
@@ -182,6 +181,7 @@ public class LockServiceTest {
     
     assertThat(scopeC.getValue()).isEqualTo("aScope");
     assertThat(tokenC.getValue()).isEqualTo("aToken");
+    assertThat(ownerIdC.getValue()).isEqualTo("anOwnerId");
     // @formatter:on
   }
 
@@ -189,12 +189,13 @@ public class LockServiceTest {
   public void testThat_lockLossIsSignalled() throws Exception {
     // @formatter:off
     BDDMockito
-      .given(mockLockService.extendLock(any(), any()))
+      .given(mockLockService.extendLock(any(), any(), any()))
       .willThrow(new LockService.LockLostException());
     
     RestAssured.given()
       .accept(ContentType.JSON)
       .param("token", "aToken")
+      .param("ownerId", "anOwnerId")
     .when()
       .log().all()
       .put("/api/v1/locks/aScope")

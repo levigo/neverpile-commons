@@ -49,6 +49,10 @@ public class JPALockService implements LockService {
   public LockRequestResult tryAcquireLock(String scope, String ownerId) {
     performHousekeeping();
 
+    return tryAcquire(scope, ownerId, UUID.randomUUID().toString());
+  }
+
+  private LockRequestResult tryAcquire(String scope, String ownerId, String token) {
     Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 
     // Existing lock owned by requester? Just extend it. Expired? Delete existing lock.
@@ -62,7 +66,6 @@ public class JPALockService implements LockService {
     }
 
     // prepare new lock
-    String token = UUID.randomUUID().toString();
     LockState state = new LockState(ownerId, Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
     LockStateEntity lse = new LockStateEntity();
@@ -95,26 +98,38 @@ public class JPALockService implements LockService {
   }
 
   @Override
-  public LockState extendLock(String scope, String token) throws LockLostException {
+  public LockState extendLock(String scope, String token, String ownerId) throws LockLostException {
     Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 
     if (existing.isPresent()) {
       LockStateEntity lse = existing.get();
-      if (Objects.equals(lse.getLockToken(), token)) {
-        lse.setValidUntil(Instant.now().plus(lockingConfiguration.getValidityDuration()));
+      if (lse.getValidUntil().isAfter(Instant.now())) {
+        if (Objects.equals(lse.getLockToken(), token)) {
+          lse.setValidUntil(Instant.now().plus(lockingConfiguration.getValidityDuration()));
 
-        // persist updated lock
-        try {
-          lockStateRepository.save(lse);
+          // persist updated lock
+          try {
+            lockStateRepository.save(lse);
 
-          return new LockState(lse.getOwnerId(), lse.getValidUntil());
-        } catch (EntityExistsException e) {
-          // late lock collision - report as fail (fall out)
+            return new LockState(lse.getOwnerId(), lse.getValidUntil());
+          } catch (EntityExistsException e) {
+            // late lock collision - report as fail (fall out)
+          }
+        } else {
+          // has been acquired otherwise
+          throw new LockLostException();
         }
       }
     }
 
-    throw new LockLostException();
+    // try silent re-acquire
+    LockRequestResult result = tryAcquire(scope, ownerId, token);
+    if (!result.isSuccess()) {
+      // re-acquire failed
+      throw new LockLostException();
+    }
+    
+    return result.getState();
   }
 
   @Override

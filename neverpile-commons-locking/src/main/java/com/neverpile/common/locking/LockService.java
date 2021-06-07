@@ -81,8 +81,7 @@ public interface LockService {
       if (getClass() != obj.getClass())
         return false;
       LockState other = (LockState) obj;
-      return Objects.equals(other.ownerId, ownerId)
-          && Objects.equals(other.validUntil, validUntil);
+      return Objects.equals(other.ownerId, ownerId) && Objects.equals(other.validUntil, validUntil);
     }
   }
 
@@ -163,7 +162,9 @@ public interface LockService {
    * An exception indicating that a lock extension request failed, because the lock has not been
    * refreshed in time and has been acquired by a third party.
    */
-  @ResponseStatus(code = HttpStatus.GONE, reason = "Lock has been acquired by other party")
+  @ResponseStatus(
+      code = HttpStatus.GONE,
+      reason = "Lock has been acquired by other party")
   public class LockLostException extends Exception {
     private static final long serialVersionUID = 1L;
   }
@@ -178,15 +179,19 @@ public interface LockService {
   LockRequestResult tryAcquireLock(String scope, String ownerId);
 
   /**
-   * Extend the validity of a lock.
+   * Extend the validity of a lock. If the lock is currently held by the owner and associated with
+   * the given token, the validity is extended and the new validity time is signaled as part of the
+   * returned LockState. If the lock is currently held by another party, a {@link LockLostException}
+   * is thrown. If the lock is currently not held by anyone, a silent re-acquire is attempted.
    * 
    * @param scope the lock scope
    * @param token the secret lock token
+   * @param ownerId the id of the lock owner
    * @return the new LockState
    * @throws LockLostException if the lock extension request failed, because the lock has not been
    *           refreshed in time and this has been acquired by a third party.
    */
-  LockState extendLock(String scope, String token) throws LockLostException;
+  LockState extendLock(String scope, String token, String ownerId) throws LockLostException;
 
   /**
    * Release a lock.

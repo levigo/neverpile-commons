@@ -50,21 +50,17 @@ public class LockServiceResource {
   public LockRequestResult tryAcquireLock(@PathVariable("scope") final String scope, final Principal principal,
       @RequestParam(
           name = "ownerId",
-          required = false) String ownerId,
-      @RequestParam(
-          name = "ownerName",
-          required = false) String ownerName) throws ConflictException {
+          required = false) String ownerId)
+      throws ConflictException {
     // derive owner id and name from principal if not explicitly set
     if (null == ownerId && null != principal)
       ownerId = principal.getName();
-    if (null == ownerName && null != principal)
-      ownerName = principal.toString();
 
     LockRequestResult result = lockService.tryAcquireLock(scope, ownerId);
-    if(!result.isSuccess()) {
+    if (!result.isSuccess()) {
       throw new ConflictException();
     }
-       
+
     return result;
   }
 
@@ -72,9 +68,16 @@ public class LockServiceResource {
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
-  public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam("token") String token)
+  public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam("token") String token,
+      final Principal principal, @RequestParam(
+          name = "ownerId",
+          required = false) String ownerId)
       throws LockLostException {
-    return lockService.extendLock(scope, token);
+    // derive owner id and name from principal if not explicitly set
+    if (null == ownerId && null != principal)
+      ownerId = principal.getName();
+
+    return lockService.extendLock(scope, token, ownerId);
   }
 
   @DeleteMapping("{scope}")
