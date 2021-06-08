@@ -128,7 +128,7 @@ public class JPALockService implements LockService {
       // re-acquire failed
       throw new LockLostException();
     }
-    
+
     return result.getState();
   }
 
@@ -164,5 +164,16 @@ public class JPALockService implements LockService {
       LOGGER.debug("Running housekeeping, deleting locks expired before {}", deleteBefore);
       lockStateRepository.deleteByValidUntilBefore(deleteBefore);
     }
+  }
+
+  @Override
+  public boolean verifyLock(String scope, String token) {
+    return lockStateRepository.findById(scope).map(lse ->
+        // matching token?
+        lse.getLockToken().equals(token) ||
+        // expired lock state means "not locked"
+        Instant.now().isAfter(lse.getValidUntil()))
+      // not found -> ok as well.
+      .orElse(true);
   }
 }

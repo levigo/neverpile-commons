@@ -208,4 +208,13 @@ public interface LockService {
    * @return the current lock state or the empty {@link Optional} if the lock does not exist
    */
   Optional<LockState> queryLock(String scope);
+
+  /**
+   * Validate a lock token.
+   * 
+   * @param scope the lock scope
+   * @param token the lock token
+   * @return <code>true</code> if the token is valid or the resource is not locked, <code>false</code> otherwise.
+   */
+  boolean verifyLock(String scope, String token);
 }
