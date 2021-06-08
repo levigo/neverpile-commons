@@ -31,7 +31,7 @@ import io.restassured.http.ContentType;
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT, properties = "server.error.include-message=always")
 @EnableAutoConfiguration
-public class LockServiceTest {
+public class LockServiceResourceTest {
   @TestConfiguration
   public static class TestConfig {
     @Bean
