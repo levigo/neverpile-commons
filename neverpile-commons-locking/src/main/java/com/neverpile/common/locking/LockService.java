@@ -12,6 +12,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 public interface LockService {
   /**
+   * The header used to provide a lock token by the client to the resource endpoint.
+   */
+  public static final String LOCK_TOKEN_HEADER = "X-Neverpile-Lock-Token";
+
+  /**
+   * The header used to inform the client about the lock scope of a retrieved resource.
+   */
+  public static final String LOCK_SCOPE_HEADER = "X-Neverpile-Lock-Scope";
+
+  /**
    * A representation of a lock's state.
    */
   public class LockState {
@@ -214,7 +224,8 @@ public interface LockService {
    * 
    * @param scope the lock scope
    * @param token the lock token
-   * @return <code>true</code> if the token is valid or the resource is not locked, <code>false</code> otherwise.
+   * @return <code>true</code> if the token is valid or the resource is not locked,
+   *         <code>false</code> otherwise.
    */
   boolean verifyLock(String scope, String token);
 }
