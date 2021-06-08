@@ -12,6 +12,10 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.neverpile.common.locking.LockService.LockRequestResult;
 
+/**
+ * A service used to provide locking services for web requests. In can only be used in scope
+ * {@link WebApplicationContext#SCOPE_REQUEST}.
+ */
 @Service
 @Scope(
     scopeName = WebApplicationContext.SCOPE_REQUEST,
@@ -36,7 +40,14 @@ public class RequestLockingService {
     IMPLICIT
   }
 
+  /**
+   * A request scoped lock must be unlocked with {@link #releaseIfLocked()} at the end of a request.
+   */
   public interface RequestScopedLock {
+    /**
+     * Release the lock if it was locked by an earlier call to
+     * {@link RequestLockingService#acquireLock(String, Mode)}.
+     */
     void releaseIfLocked();
   }
 
@@ -47,7 +58,14 @@ public class RequestLockingService {
   @Autowired
   private HttpServletRequest request;
 
-  public RequestScopedLock performLocking(final String scopeId, final Mode mode) {
+  /**
+   * Perform locking for a web request with the given scope and mode.
+   * 
+   * @param scopeId the scope
+   * @param mode the lock mode
+   * @return a lock to be unlocked at the end of the request
+   */
+  public RequestScopedLock acquireLock(final String scopeId, final Mode mode) {
     String lockToken = request.getHeader(LockService.LOCK_TOKEN_HEADER);
 
     LockRequestResult result = null;
