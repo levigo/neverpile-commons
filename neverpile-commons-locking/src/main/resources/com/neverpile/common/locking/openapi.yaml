@@ -71,7 +71,14 @@ paths:
         schema:
           type: string
         required: true
-        
+      - name: ownerId
+        in: query
+        description: The id of the prospective owner of the lock - if not 
+            provided, will try to derive the id from the authenticated principal.
+        schema:
+          type: string
+        required: false
+                
       responses:
         200:
           description: Lock extended
