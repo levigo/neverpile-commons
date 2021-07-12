@@ -1,0 +1,145 @@
+openapi: 3.0.1
+
+info:
+  title: Neverpile fusion API
+  contact:
+    name: levigo solutions gmbh
+    url: https://levigo.de
+    email: solutions@levigo.de
+  version: 1.0.0
+  
+tags:
+- name: Locking
+  description: Locking service API
+
+paths:
+  /api/v1/locks/{scope}:
+    parameters:
+    - name: scope
+      in: path
+      description: The scope of the lock to be dealt with
+      schema:
+        type: string
+      required: true
+
+    get:
+      summary: Query the current lock state
+      description: Return the seen/unseen information for a certain context (as indicated by the given key) and a
+        certain principal. Return an empty `SeenUnseenInfo` (indicating nothing has evern been
+        seen) if no info has previously been persisted.
+        
+      responses:
+        200:
+          description: Lock state found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockState'
+        404:
+          description: Lock not found - the scope is not currently locked
+                
+    post:
+      summary: Try to lock the given scope
+      description: Try to acquire a lock for the given scope
+      
+      parameters:
+      - name: ownerId
+        in: query
+        description: The id of the prospective owner of the lock - if not 
+            provided, will try to derive the id from the authenticated principal.
+        schema:
+          type: string
+        required: false
+        
+      responses:
+        200:
+          description: Lock created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockRequestResult'
+        409:
+          description: The lock is currently owned by a third party
+
+    put:
+      summary: Extend the lock for the given scope.
+        
+      parameters:
+      - name: token
+        in: query
+        description: The secret token establishing ownership of the lock.
+        schema:
+          type: string
+        required: true
+      - name: ownerId
+        in: query
+        description: The id of the prospective owner of the lock - if not 
+            provided, will try to derive the id from the authenticated principal.
+        schema:
+          type: string
+        required: false
+                
+      responses:
+        200:
+          description: Lock extended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockState'
+        
+        410:
+          description: Lock lost - indicating that a lock extension request failed,
+            because the lock has not been refreshed in time and has been acquired
+            by a third party.
+          
+    delete:
+      summary: Release the lock for the given scope. If
+          the scope isn't currently locked, the caller isn't owner of the lock etc.
+          the request is silently ignored.
+        
+      parameters:
+      - name: token
+        in: query
+        description: The secret token establishing ownership of the lock. 
+        schema:
+          type: string
+        required: true
+        
+      responses:
+        204:
+          description: Lock deleted
+          
+components:
+  schemas:
+    LockState:
+      description: |
+        The lock state describes the state of a lock for a certain scope.
+        
+      type: object
+      properties:
+        ownerId:
+          type: string
+          description: The id of the owner of the lock
+          
+        validUntil:
+          type: string
+          format: date-time
+          description: The end of the current validity period of the lock
+          
+    LockRequestResult:
+      description: |
+        The result of a lock request.
+        
+      type: object
+      properties:
+        token:
+          type: string
+          description: The secret lock token.
+          
+        success:
+          type: boolean
+          description: Always true
+          
+        state:
+          $ref: '#/components/schemas/LockState'
+            
