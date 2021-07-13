@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Service;
 
 import com.neverpile.common.locking.LockService;
@@ -34,6 +36,8 @@ import com.neverpile.common.locking.LockingConfiguration;
 @ConditionalOnClass(
     name = "javax.persistence.EntityManager")
 @ComponentScan
+@EntityScan
+@EnableJpaRepositories
 public class JPALockService implements LockService {
   private static final Logger LOGGER = LoggerFactory.getLogger(JPALockService.class);
 
