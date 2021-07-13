@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.neverpile.common.locking.LockService;
 import com.neverpile.common.locking.LockingConfiguration;
@@ -38,6 +39,7 @@ import com.neverpile.common.locking.LockingConfiguration;
 @ComponentScan
 @EntityScan
 @EnableJpaRepositories
+@Transactional
 public class JPALockService implements LockService {
   private static final Logger LOGGER = LoggerFactory.getLogger(JPALockService.class);
 
