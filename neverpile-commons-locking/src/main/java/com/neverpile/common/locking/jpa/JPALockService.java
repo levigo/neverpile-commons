@@ -27,7 +27,7 @@ import com.neverpile.common.locking.LockingConfiguration;
  * environment and the property <code>neverpile.locking.jpa.enabled</code> must be set to
  * <code>true</code>.
  * <p>
- * The implementation will contribute the {@link LockStateEntity} to JPA
+ * The implementation will contribute the {@link LockStateEntity} to the general JPA context.
  */
 @Service
 @ConditionalOnProperty(
