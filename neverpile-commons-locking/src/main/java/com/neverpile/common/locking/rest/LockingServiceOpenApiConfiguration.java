@@ -12,10 +12,10 @@ import com.neverpile.common.openapi.ResourceOpenApiFragment;
  * A configuration exposing the OpenAPI spec for the fusion REST API.
  */
 @Configuration
-public class OpenApiConfiguration {
+public class LockingServiceOpenApiConfiguration {
   @Configuration
   @ConditionalOnBean(LockServiceResource.class)
-  public static class SeenUnseenResourceConfiguration {
+  public static class LockingResourceConfiguration {
     @Bean
     public OpenApiFragment lockingOpenApiFragment() {
       return new ResourceOpenApiFragment("neverpile", "locking",
