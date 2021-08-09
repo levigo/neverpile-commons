@@ -168,6 +168,19 @@ public class JPALockServiceTest {
 
     assertThat(fail.isSuccess()).isFalse();
   }
+  
+  @Test
+  public void testThat_acquisitionFailsOnCollisionWithSameUser() {
+    lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+    
+    TestTransaction.start();
+    LockRequestResult fail = lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.end();
+    
+    assertThat(fail.isSuccess()).isFalse();
+  }
 
   @Test
   public void testThat_cannotReleaseForeignLock() {

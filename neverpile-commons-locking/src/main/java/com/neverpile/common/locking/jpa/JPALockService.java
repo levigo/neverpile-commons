@@ -64,8 +64,15 @@ public class JPALockService implements LockService {
     // Existing lock owned by requester? Just extend it. Expired? Delete existing lock.
     if (existing.isPresent()) {
       LockStateEntity lse = existing.get();
-      if (Objects.equals(lse.getOwnerId(), ownerId) || lse.getValidUntil().isBefore(Instant.now())) {
+      if (lse.getValidUntil().isBefore(Instant.now())) {
         lockStateRepository.delete(lse);
+      } else if (Objects.equals(lse.getOwnerId(), ownerId) && Objects.equals(lse.getLockToken(), token)) {
+        try {
+          LockState extendedLock = extendLock(scope, token, ownerId);
+          return new LockRequestResult(true, token, new LockState(lse.getOwnerId(), extendedLock.getValidUntil()));
+        } catch (LockLostException e) {
+          return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
+        }
       } else {
         return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
       }
@@ -175,11 +182,11 @@ public class JPALockService implements LockService {
   @Override
   public boolean verifyLock(String scope, String token) {
     return lockStateRepository.findById(scope).map(lse ->
-        // matching token?
-        lse.getLockToken().equals(token) ||
-        // expired lock state means "not locked"
+    // matching token?
+    lse.getLockToken().equals(token) ||
+    // expired lock state means "not locked"
         Instant.now().isAfter(lse.getValidUntil()))
-      // not found -> ok as well.
-      .orElse(true);
+        // not found -> ok as well.
+        .orElse(true);
   }
 }
