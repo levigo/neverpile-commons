@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,14 +29,16 @@ import io.micrometer.core.annotation.Timed;
 @RestController
 @ConditionalOnWebApplication
 @RequestMapping(
-    path = "/api/v1/locks",
+    path = "/",
     produces = MediaType.APPLICATION_JSON_VALUE)
 @ConditionalOnBean(LockService.class)
 public class LockServiceResource {
+  public static final String PREFIX = "/api/v1/locks";
+
   @Autowired
   private LockService lockService;
 
-  @GetMapping("{scope}")
+  @GetMapping(PREFIX + "/{scope}")
   @Timed(
       description = "get lock status",
       value = "fusion.lock.get")
@@ -43,7 +46,7 @@ public class LockServiceResource {
     return lockService.queryLock(scope).orElseThrow(() -> new NotFoundException());
   }
 
-  @PostMapping("{scope}")
+  @PostMapping(PREFIX + "/{scope}")
   @Timed(
       description = "try to acquire a lock",
       value = "fusion.lock.acquire")
@@ -64,7 +67,7 @@ public class LockServiceResource {
     return result;
   }
 
-  @PutMapping("{scope}")
+  @PutMapping(PREFIX + "/{scope}")
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
@@ -80,11 +83,21 @@ public class LockServiceResource {
     return lockService.extendLock(scope, token, ownerId);
   }
 
-  @DeleteMapping("{scope}")
+  @DeleteMapping(PREFIX + "/{scope}")
   @Timed(
       description = "release a lock",
       value = "fusion.lock.release")
-  public void release(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
+  public ResponseEntity<?> release(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
     lockService.releaseLock(scope, token);
+    return ResponseEntity.noContent().build();
+  }
+  
+  @PostMapping("/api-noauth/v1/locks/{scope}/release")
+  @Timed(
+      description = "release a lock",
+      value = "fusion.lock.release")
+  public ResponseEntity<?> releaseNoauth(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
+    lockService.releaseLock(scope, token);
+    return ResponseEntity.noContent().build();
   }
 }

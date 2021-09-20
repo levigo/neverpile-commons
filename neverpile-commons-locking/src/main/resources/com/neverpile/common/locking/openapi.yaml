@@ -108,7 +108,53 @@ paths:
       responses:
         204:
           description: Lock deleted
-          
+  /api-noauth/v1/locks/{scope}/release:
+    parameters:
+    - name: scope
+      in: path
+      description: The scope of the lock to be dealt with
+      schema:
+        type: string
+      required: true
+    
+    post:
+      summary: Release the lock for the given scope using an unauthenticated GET request. This call is mainly
+        intended to release locks upon closing a browser window/tab. As regular http calls are unrealiable
+        during handling of `onBefureUnload`-events, the alternative `Navigator.sendBeacon()` API can be used
+        (see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon and 
+        https://w3c.github.io/beacon for details). This api can only be used to send POST requests without
+        the option to provide authentication headers. The `token` parameter can be provided in the query part
+        or the form data.
+      
+        _Note:_ Authentication for the this form of operation is covered by the lock token. As lock tokens are 
+        generated using a cryptographically strong UUID, knowledge of the lock token qualifies as authentication.
+      
+        The base path `/api-noauth` is supposed to not be configured for authentication by the security configuration.
+        
+      parameters:
+      - name: token
+        in: query
+        description: The secret token establishing ownership of the lock.
+          Either this parameter or the form data parameter of the same name is required.
+        schema:
+          type: string
+        required: false
+      
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The secret token establishing ownership of the lock. 
+                    Either this parameter or the query parameter of the same name is required.
+                  
+      responses:
+        204:
+          description: Lock deleted
 components:
   schemas:
     LockState:
