@@ -85,6 +85,37 @@ public class NoOpLockServiceResourceTest {
     assertThat(res.getState().getValidUntil()).isAfter(Instant.now().plusSeconds(3600));
     // @formatter:on
   }
+  
+  @Test
+  public void testThat_lockCanBeAcquiredTwice() throws Exception {
+    // @formatter:off
+    // fist acquire
+    RestAssured.given()
+        .accept(ContentType.JSON)
+        .param("ownerId", "anOwnerId")
+        .param("ownerName", "anOwnerName")
+        .when()
+        .log().all()
+        .post("/api/v1/locks/aScope")
+        .then()
+        .log().all()
+        .statusCode(200)
+        .contentType(ContentType.JSON);
+
+    // second
+    RestAssured.given()
+        .accept(ContentType.JSON)
+        .param("ownerId", "anOwnerId")
+        .param("ownerName", "anOwnerName")
+        .when()
+        .log().all()
+        .post("/api/v1/locks/aScope")
+        .then()
+        .log().all()
+        .statusCode(200)
+        .contentType(ContentType.JSON);
+    // @formatter:on
+  }
 
   @Test
   public void testThat_lockCanBeExtended() throws Exception {
