@@ -1,6 +1,5 @@
 package com.neverpile.common.locking.rest;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.neverpile.common.locking.LockService;
-import com.neverpile.common.locking.LockService.LockLostException;
 import com.neverpile.common.locking.LockService.LockRequestResult;
 import com.neverpile.common.locking.LockService.LockState;
 
@@ -66,9 +64,9 @@ public class NoOpLockServiceResource {
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
-  public LockState extendLock(@PathVariable("scope") final String scope, final Principal principal, @RequestParam(
+  public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam(
       name = "ownerId",
-      required = false) String ownerId) throws LockLostException {
+      required = false) String ownerId) {
     LockState fakeLock = new LockState();
     fakeLock.setOwnerId(ownerId);
     fakeLock.setValidUntil(Instant.now().plus(30, ChronoUnit.DAYS));
