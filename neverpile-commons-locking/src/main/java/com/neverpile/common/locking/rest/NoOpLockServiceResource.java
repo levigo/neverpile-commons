@@ -52,13 +52,11 @@ public class NoOpLockServiceResource {
   @Timed(
       description = "try to acquire a lock",
       value = "fusion.lock.acquire")
-  public LockRequestResult tryAcquireLock(@PathVariable("scope") final String scope, final Principal principal,
-      @RequestParam(
-          name = "ownerId",
-          required = false) String ownerId)
-      throws ConflictException {
+  public LockRequestResult tryAcquireLock(@PathVariable("scope") final String scope, @RequestParam(
+      name = "ownerId",
+      required = false) String ownerId) {
     LockState fakeLock = new LockState();
-    fakeLock.setOwnerId("fake");
+    fakeLock.setOwnerId(ownerId);
     fakeLock.setValidUntil(Instant.now().plus(30, ChronoUnit.DAYS));
 
     return new LockRequestResult(true, "fake", fakeLock);
@@ -68,13 +66,11 @@ public class NoOpLockServiceResource {
   @Timed(
       description = "extend a lock",
       value = "fusion.lock.extend")
-  public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam("token") String token,
-      final Principal principal, @RequestParam(
-          name = "ownerId",
-          required = false) String ownerId)
-      throws LockLostException {
+  public LockState extendLock(@PathVariable("scope") final String scope, final Principal principal, @RequestParam(
+      name = "ownerId",
+      required = false) String ownerId) throws LockLostException {
     LockState fakeLock = new LockState();
-    fakeLock.setOwnerId("fake");
+    fakeLock.setOwnerId(ownerId);
     fakeLock.setValidUntil(Instant.now().plus(30, ChronoUnit.DAYS));
     return fakeLock;
   }
@@ -83,7 +79,7 @@ public class NoOpLockServiceResource {
   @Timed(
       description = "release a lock",
       value = "fusion.lock.release")
-  public ResponseEntity<?> release(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
+  public ResponseEntity<?> release(@PathVariable("scope") final String scope) {
     return ResponseEntity.noContent().build();
   }
 
@@ -91,8 +87,7 @@ public class NoOpLockServiceResource {
   @Timed(
       description = "release a lock",
       value = "fusion.lock.release")
-  public ResponseEntity<?> releaseNoauth(@PathVariable("scope") final String scope,
-      @RequestParam("token") String token) {
+  public ResponseEntity<?> releaseNoauth(@PathVariable("scope") final String scope) {
     return ResponseEntity.noContent().build();
   }
 }

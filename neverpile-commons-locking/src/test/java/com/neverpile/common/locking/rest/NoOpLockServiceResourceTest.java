@@ -81,7 +81,7 @@ public class NoOpLockServiceResourceTest {
 
     assertThat(res.getToken()).isEqualTo("fake");
     assertThat(res.isSuccess()).isTrue();
-    assertThat(res.getState().getOwnerId()).isEqualTo("fake");
+    assertThat(res.getState().getOwnerId()).isEqualTo("anOwnerId");
     assertThat(res.getState().getValidUntil()).isAfter(Instant.now().plusSeconds(3600));
     // @formatter:on
   }
@@ -132,7 +132,7 @@ public class NoOpLockServiceResourceTest {
       .statusCode(200)
       .extract().as(LockState.class);
     
-    assertThat(res.getOwnerId()).isEqualTo("fake");
+    assertThat(res.getOwnerId()).isEqualTo("anOwnerId");
     assertThat(res.getValidUntil()).isAfter(Instant.now().plusSeconds(3600));
     // @formatter:on
   }
