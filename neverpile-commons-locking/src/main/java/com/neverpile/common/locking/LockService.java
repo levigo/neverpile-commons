@@ -1,6 +1,7 @@
 package com.neverpile.common.locking;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -61,7 +62,7 @@ public interface LockService {
      * @return the end of the validity period
      */
     public Instant getValidUntil() {
-      return validUntil;
+      return validUntil.truncatedTo(ChronoUnit.MICROS);
     }
 
     /**

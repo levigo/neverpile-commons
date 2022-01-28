@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -17,19 +17,19 @@ import com.neverpile.common.authorization.policy.impl.JwtClaimAuthenticationMatc
 
 public class JwtClaimAuthenticationMatcherTest {
   @Test
-  public void testThat_matcherDoesNotMatchNonJwtAuthentication() throws Exception {
+  public void testThat_matcherDoesNotMatchNonJwtAuthentication() {
     assertThat(new JwtClaimAuthenticationMatcher().matchAuthentication(
         new UsernamePasswordAuthenticationToken("foo", "bar"), Collections.singletonList("foo"))).isFalse();
   }
 
   @Test
-  public void testThat_matcherMatchesAlwaysTrueExpression() throws Exception {
+  public void testThat_matcherMatchesAlwaysTrueExpression() {
     assertThat(new JwtClaimAuthenticationMatcher().matchAuthentication(makeToken(new HashMap<>()),
         Collections.singletonList("claim:true"))).isTrue();
   }
 
   @Test
-  public void testThat_matcherMatchesExistenceOfClaim() throws Exception {
+  public void testThat_matcherMatchesExistenceOfClaim() {
     HashMap<String, Object> claims = new HashMap<>();
     claims.put("foo", "bar");
 
@@ -42,7 +42,7 @@ public class JwtClaimAuthenticationMatcherTest {
   }
 
   @Test
-  public void testThat_matcherMatchesBooleanClaim() throws Exception {
+  public void testThat_matcherMatchesBooleanClaim() {
     HashMap<String, Object> claims = new HashMap<>();
     claims.put("foo", true);
 
@@ -55,7 +55,7 @@ public class JwtClaimAuthenticationMatcherTest {
   }
 
   @Test
-  public void testThat_matcherMatchesStringClaim() throws Exception {
+  public void testThat_matcherMatchesStringClaim() {
     HashMap<String, Object> claims = new HashMap<>();
     claims.put("foo", "bar");
 
@@ -68,7 +68,7 @@ public class JwtClaimAuthenticationMatcherTest {
   }
 
   @Test
-  public void testThat_matcherMatchesNumericClaim() throws Exception {
+  public void testThat_matcherMatchesNumericClaim() {
     HashMap<String, Object> claims = new HashMap<>();
     claims.put("foo", 4711);
 
@@ -80,7 +80,7 @@ public class JwtClaimAuthenticationMatcherTest {
   }
 
   @Test
-  public void testThat_matcherMatchesInstantClaim() throws Exception {
+  public void testThat_matcherMatchesInstantClaim() {
     HashMap<String, Object> claims = new HashMap<>();
     claims.put("foo", Instant.ofEpochMilli(1000));
     claims.put("bar", Instant.ofEpochMilli(500));
@@ -131,7 +131,7 @@ public class JwtClaimAuthenticationMatcherTest {
   }
   
   @Test
-  public void testThat_matcherHandlesFailedLookups() throws Exception {
+  public void testThat_matcherHandlesFailedLookups() {
     HashMap<String, Object> claims = new HashMap<>();
     
     assertThat(new JwtClaimAuthenticationMatcher().matchAuthentication(makeToken(claims),

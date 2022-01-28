@@ -5,19 +5,14 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.stream.Stream;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.neverpile.common.specifier.Specifier;
 
 import static org.mockito.BDDMockito.*;
 
-@RunWith(SpringRunner.class)
 @JsonTest
 public class ConditionEvaluationTest {
   private static final Condition ALWAYS = new Condition() {
@@ -34,14 +29,11 @@ public class ConditionEvaluationTest {
     }
   };
 
-  @Rule
-  public final ExpectedException exception = ExpectedException.none();
-
   @MockBean
   ConditionContext ctx;
 
   @Test
-  public void testThat_equalsConditionEvaluationWorks() throws Exception {
+  public void testThat_equalsConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("baz");
 
     EqualsCondition equals = new EqualsCondition();
@@ -62,7 +54,7 @@ public class ConditionEvaluationTest {
   }
   
   @Test
-  public void testThat_equalsConditionWithBooleanWorks() throws Exception {
+  public void testThat_equalsConditionWithBooleanWorks() {
     given(ctx.resolveValue(Specifier.from("foo.aBoolean"))).willReturn(true);
     given(ctx.resolveValue(Specifier.from("foo.aBooleanAsString"))).willReturn("true");
     
@@ -84,7 +76,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_greaterThanConditionEvaluationWorks() throws Exception {
+  public void testThat_greaterThanConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("3");
     given(ctx.resolveValue(Specifier.from("foo.baz"))).willReturn(3);
 
@@ -121,7 +113,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_greaterOrEqualsToConditionEvaluationWorks() throws Exception {
+  public void testThat_greaterOrEqualsToConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("3");
     given(ctx.resolveValue(Specifier.from("foo.baz"))).willReturn(3);
 
@@ -158,7 +150,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_LessThanConditionEvaluationWorks() throws Exception {
+  public void testThat_LessThanConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("3");
     given(ctx.resolveValue(Specifier.from("foo.baz"))).willReturn(3);
 
@@ -195,7 +187,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_lessOrEqualToConditionEvaluationWorks() throws Exception {
+  public void testThat_lessOrEqualToConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("3");
     given(ctx.resolveValue(Specifier.from("foo.baz"))).willReturn(3);
 
@@ -232,7 +224,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_andConditionEvaluationWorks() throws Exception {
+  public void testThat_andConditionEvaluationWorks() {
     AndCondition and = new AndCondition();
 
     // empty list -> matches
@@ -257,7 +249,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_orConditionEvaluationWorks() throws Exception {
+  public void testThat_orConditionEvaluationWorks() {
     OrCondition or = new OrCondition();
 
     // empty list -> no match
@@ -282,7 +274,7 @@ public class ConditionEvaluationTest {
   }
   
   @Test
-  public void testThat_existsConditionEvaluationWorks() throws Exception {
+  public void testThat_existsConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("baz");
     given(ctx.resolveValue(Specifier.from("foo.baz"))).willReturn("baz");
 
@@ -303,7 +295,7 @@ public class ConditionEvaluationTest {
   
 
   @Test
-  public void testThat_notConditionEvaluationWorks() throws Exception {
+  public void testThat_notConditionEvaluationWorks() {
     NotCondition not = new NotCondition();
 
     not.addCondition(ALWAYS);
@@ -315,7 +307,7 @@ public class ConditionEvaluationTest {
   }
   
   @Test
-  public void testThat_trueConditionEvaluationWorks() throws Exception {
+  public void testThat_trueConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.true"))).willReturn("true");
     given(ctx.resolveValue(Specifier.from("foo.TrUe"))).willReturn("TrUe");
     given(ctx.resolveValue(Specifier.from("foo._true"))).willReturn(" true");
@@ -338,7 +330,7 @@ public class ConditionEvaluationTest {
   }
   
   @Test
-  public void testThat_falseConditionEvaluationWorks() throws Exception {
+  public void testThat_falseConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.true"))).willReturn("true");
     given(ctx.resolveValue(Specifier.from("foo.TrUe"))).willReturn("TrUe");
     given(ctx.resolveValue(Specifier.from("foo._true"))).willReturn(" true");
@@ -361,7 +353,7 @@ public class ConditionEvaluationTest {
   }
 
   @Test
-  public void testThat_rangeConditionEvaluationWorks() throws Exception {
+  public void testThat_rangeConditionEvaluationWorks() {
     given(ctx.resolveValue(Specifier.from("foo.bar"))).willReturn("3");
 
     RangeCondition range = new RangeCondition();

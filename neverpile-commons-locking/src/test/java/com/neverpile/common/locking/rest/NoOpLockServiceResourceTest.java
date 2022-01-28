@@ -43,7 +43,7 @@ public class NoOpLockServiceResourceTest {
   }
 
   @Test
-  public void testThat_existingLockCanBeQueried() throws Exception {
+  public void testThat_existingLockCanBeQueried() {
     // @formatter:off
     // query existing lock
     LockState res = RestAssured.given()
@@ -64,7 +64,7 @@ public class NoOpLockServiceResourceTest {
   }
 
   @Test
-  public void testThat_lockCanBeAcquired() throws Exception {
+  public void testThat_lockCanBeAcquired() {
     // @formatter:off
     LockRequestResult res = RestAssured.given()
       .accept(ContentType.JSON)
@@ -87,7 +87,7 @@ public class NoOpLockServiceResourceTest {
   }
   
   @Test
-  public void testThat_lockCanBeAcquiredTwice() throws Exception {
+  public void testThat_lockCanBeAcquiredTwice() {
     // @formatter:off
     // fist acquire
     RestAssured.given()
@@ -118,7 +118,7 @@ public class NoOpLockServiceResourceTest {
   }
 
   @Test
-  public void testThat_lockCanBeExtended() throws Exception {
+  public void testThat_lockCanBeExtended() {
     // @formatter:off
     LockState res = RestAssured.given()
       .accept(ContentType.JSON)
@@ -137,7 +137,7 @@ public class NoOpLockServiceResourceTest {
     // @formatter:on
   }
 
-  public void testThat_lockCanBeReleased() throws Exception {
+  public void testThat_lockCanBeReleased() {
     // @formatter:off
     RestAssured.given()
       .accept(ContentType.JSON)

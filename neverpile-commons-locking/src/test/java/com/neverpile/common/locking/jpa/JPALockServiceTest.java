@@ -145,7 +145,7 @@ public class JPALockServiceTest {
   }
 
   @Test
-  public void testThat_lockCanBeQueried() throws LockLostException, InterruptedException {
+  public void testThat_lockCanBeQueried() {
     LockRequestResult acquired = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();

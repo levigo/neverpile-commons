@@ -7,15 +7,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.neverpile.common.authorization.api.Action;
 import com.neverpile.common.authorization.api.Permission;
@@ -27,10 +26,10 @@ import com.neverpile.common.authorization.policy.impl.AuthorityAuthenticationMat
 import com.neverpile.common.authorization.policy.impl.EmptyAuthorizationContext;
 import com.neverpile.common.authorization.policy.impl.PolicyBasedAuthorizationService;
 
-@RunWith(SpringRunner.class)
 @Import({
     PolicyBasedAuthorizationService.class, AuthorityAuthenticationMatcher.class
 })
+@SpringBootTest
 public class PolicyBasedAuthorizationServiceTest {
   @Autowired
   PolicyBasedAuthorizationService authService;
@@ -40,7 +39,7 @@ public class PolicyBasedAuthorizationServiceTest {
 
   private final EmptyAuthorizationContext eac = new EmptyAuthorizationContext();
 
-  @Before
+  @BeforeEach
   public void init() {
     SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
   }
