@@ -4,15 +4,13 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.HashMap;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
 public class OpentracingAspectTest {
   @Autowired
   TestTracer tt;
@@ -20,14 +18,14 @@ public class OpentracingAspectTest {
   @Autowired
   SomeTracedService service;
 
-  @Before
+  @BeforeEach
   public void reset() {
     service.reset();
     tt.getFinishedSpans().clear();
   }
 
   @Test
-  public void testNoParams() throws Exception {
+  public void testNoParams() {
     service.noParams();
 
     assertThat(service.getInvocationCounter()).isEqualTo(1);
@@ -37,7 +35,7 @@ public class OpentracingAspectTest {
   }
 
   @Test
-  public void testRenamedOp() throws Exception {
+  public void testRenamedOp() {
     service.weirdMethodNameReplacedByOperationName();
 
     assertThat(service.getInvocationCounter()).isEqualTo(1);
@@ -47,7 +45,7 @@ public class OpentracingAspectTest {
   }
 
   @Test
-  public void testParams() throws Exception {
+  public void testParams() {
     service.someParams("hello", 4711, true);
 
     assertThat(service.getInvocationCounter()).isEqualTo(1);
@@ -59,7 +57,7 @@ public class OpentracingAspectTest {
   }
   
   @Test
-  public void testSelfNamingParam() throws Exception {
+  public void testSelfNamingParam() {
     service.selfNamingParam("hello");
     
     assertThat(service.getInvocationCounter()).isEqualTo(1);
@@ -69,7 +67,7 @@ public class OpentracingAspectTest {
   }
 
   @Test
-  public void testPartialParams() throws Exception {
+  public void testPartialParams() {
     service.someMoreParams("hello", 4711, true);
 
     assertThat(service.getInvocationCounter()).isEqualTo(1);
@@ -78,7 +76,7 @@ public class OpentracingAspectTest {
   }
   
   @Test
-  public void testTagExtractor() throws Exception {
+  public void testTagExtractor() {
     HashMap<String, Object> m = new HashMap<>();
     m.put("foo", "bar");
     m.put("bar", 1234);

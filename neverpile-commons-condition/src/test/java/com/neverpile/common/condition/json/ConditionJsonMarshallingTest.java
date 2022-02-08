@@ -4,11 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neverpile.common.condition.AndCondition;
@@ -17,7 +15,6 @@ import com.neverpile.common.condition.ExistsCondition;
 import com.neverpile.common.condition.OrCondition;
 import com.neverpile.common.specifier.Specifier;
 
-@RunWith(SpringRunner.class)
 @JsonTest
 public class ConditionJsonMarshallingTest {
   @Autowired
@@ -34,7 +31,7 @@ public class ConditionJsonMarshallingTest {
         "  }" + //
         "}";
 
-    AndCondition and = (AndCondition) mapper.readValue(json, AndCondition.class);
+    AndCondition and = mapper.readValue(json, AndCondition.class);
 
     // and must contain a single or
     assertThat(and.getConditions()).hasSize(1);

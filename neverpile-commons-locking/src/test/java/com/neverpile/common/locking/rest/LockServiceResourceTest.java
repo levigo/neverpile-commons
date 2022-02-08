@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -52,9 +53,9 @@ public class LockServiceResourceTest {
   }
 
   @Test
-  public void testThat_existingLockCanBeQueried() throws Exception {
+  public void testThat_existingLockCanBeQueried() {
     // @formatter:off
-    Instant anInstant = Instant.now();
+    Instant anInstant = Instant.now().truncatedTo(ChronoUnit.MICROS);
     
     BDDMockito
       .given(mockLockService.queryLock(any()))
@@ -78,7 +79,7 @@ public class LockServiceResourceTest {
   }
   
   @Test
-  public void testThat_nonexistingLockCanBeQueried() throws Exception {
+  public void testThat_nonexistingLockCanBeQueried() {
     // @formatter:off
     BDDMockito
       .given(mockLockService.queryLock(any()))
@@ -97,12 +98,12 @@ public class LockServiceResourceTest {
   }
 
   @Test
-  public void testThat_lockCanBeAcquired() throws Exception {
+  public void testThat_lockCanBeAcquired() {
     // @formatter:off
     ArgumentCaptor<String> scopeC = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> ownerIdC = ArgumentCaptor.forClass(String.class);
 
-    Instant anInstant = Instant.now();
+    Instant anInstant = Instant.now().truncatedTo(ChronoUnit.MICROS);;
     
     BDDMockito
       .given(mockLockService.tryAcquireLock(scopeC.capture(), ownerIdC.capture()))
@@ -132,7 +133,7 @@ public class LockServiceResourceTest {
   }
 
   @Test
-  public void testThat_lockConflictIsSignalled() throws Exception {
+  public void testThat_lockConflictIsSignalled() {
     // @formatter:off
     BDDMockito
       .given(mockLockService.tryAcquireLock(any(), any()))
@@ -158,7 +159,7 @@ public class LockServiceResourceTest {
     ArgumentCaptor<String> tokenC = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> ownerIdC = ArgumentCaptor.forClass(String.class);
 
-    Instant anInstant = Instant.now();
+    Instant anInstant = Instant.now().truncatedTo(ChronoUnit.MICROS);;
 
     BDDMockito
       .given(mockLockService.extendLock(scopeC.capture(), tokenC.capture(), ownerIdC.capture()))
@@ -205,7 +206,8 @@ public class LockServiceResourceTest {
     // @formatter:on
   }
 
-  public void testThat_lockCanBeReleased() throws Exception {
+  @Test
+  public void testThat_lockCanBeReleased() {
     // @formatter:off
     ArgumentCaptor<String> scopeC = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> tokenC = ArgumentCaptor.forClass(String.class);

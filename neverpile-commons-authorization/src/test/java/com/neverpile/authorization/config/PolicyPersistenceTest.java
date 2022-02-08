@@ -1,20 +1,16 @@
 package com.neverpile.authorization.config;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 
 import org.assertj.core.api.ListAssert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -28,18 +24,14 @@ import com.neverpile.common.condition.ExistsCondition;
 import com.neverpile.common.condition.NotCondition;
 import com.neverpile.common.condition.OrCondition;
 
-@RunWith(SpringRunner.class)
 @JsonTest
 public class PolicyPersistenceTest {
   @Autowired
   ObjectMapper mapper;
 
-  @Rule
-  public final ExpectedException exception = ExpectedException.none();
-
   @Test
   public void testThat_policyCanBeDeserialized() throws Exception {
-    AccessPolicy policy = (AccessPolicy) mapper.readValue(getClass().getResourceAsStream("example-policy.json"),
+    AccessPolicy policy = mapper.readValue(getClass().getResourceAsStream("example-policy.json"),
         AccessPolicy.class);
 
     assertThat(policy.getDefaultEffect()).isEqualTo(Effect.DENY);
@@ -76,7 +68,7 @@ public class PolicyPersistenceTest {
 
   @Test
   public void testThat_multipleNestedConditionsAreProperlyDeserialized() throws Exception {
-    AccessPolicy policy = (AccessPolicy) mapper.readValue(getClass().getResourceAsStream("non-simple-composite-condition.json"), AccessPolicy.class);
+    AccessPolicy policy = mapper.readValue(getClass().getResourceAsStream("non-simple-composite-condition.json"), AccessPolicy.class);
 
     AccessRule rule = policy.getRules().stream().filter(r -> r.getName().equals("Test deserialization of or-condition")).findFirst().get();
 
@@ -91,10 +83,9 @@ public class PolicyPersistenceTest {
   }
 
   @Test
-  public void testThat_unrecognizedPropertyTypeIsRejected() throws Exception {
-    exception.expect(UnrecognizedPropertyException.class);
-    exception.expectMessage(containsString("foo"));
-
-    mapper.readValue("{\"rules\": [{\"conditions\": { \"foo\":  []}}]}", AccessPolicy.class);
+  public void testThat_unrecognizedPropertyTypeIsRejected() {
+    UnrecognizedPropertyException exception = assertThrows(UnrecognizedPropertyException.class, () ->
+        mapper.readValue("{\"rules\": [{\"conditions\": { \"foo\":  []}}]}", AccessPolicy.class));
+    assertThat(exception.getMessage()).contains("foo");
   }
 }

@@ -12,8 +12,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.neverpile.common.specifier.Specifier;
 
 /**
- * Comparison Conditions is a finite Condition and compares one ore more predicates in a given
- * context against one ore more predefined comparison values. The evaluation of the comparison is
+ * Comparison Conditions is a finite Condition and compares one or more predicates in a given
+ * context against one or more predefined comparison values. The evaluation of the comparison is
  * defined by its implementation classes.
  */
 public abstract class ComparisonCondition extends Condition {

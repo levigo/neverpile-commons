@@ -1,6 +1,7 @@
 package com.neverpile.common.locking.jpa;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -79,7 +80,7 @@ public class JPALockService implements LockService {
     }
 
     // prepare new lock
-    LockState state = new LockState(ownerId, Instant.now().plus(lockingConfiguration.getValidityDuration()));
+    LockState state = new LockState(ownerId, Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
 
     LockStateEntity lse = new LockStateEntity();
     lse.setScope(scope);
@@ -118,7 +119,7 @@ public class JPALockService implements LockService {
       LockStateEntity lse = existing.get();
       if (lse.getValidUntil().isAfter(Instant.now())) {
         if (Objects.equals(lse.getLockToken(), token)) {
-          lse.setValidUntil(Instant.now().plus(lockingConfiguration.getValidityDuration()));
+          lse.setValidUntil(Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
 
           // persist updated lock
           try {

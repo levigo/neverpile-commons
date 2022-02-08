@@ -1,12 +1,13 @@
 package com.neverpile.common.specifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpecifierTest {
   @Test
-  public void testThat_specifierCanBeParsed() throws Exception {
+  public void testThat_specifierCanBeParsed() {
     assertThat(Specifier.from("")).isEqualTo(new Specifier(new String[0], 0));
 
     assertThat(Specifier.from("foo")).isEqualTo(new Specifier("foo"));
@@ -18,58 +19,58 @@ public class SpecifierTest {
     assertThat(Specifier.from("foo.bar ")).isEqualTo(new Specifier("foo", "bar"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDotAtStartIsRejected() throws Exception {
-    Specifier.from(".foo.bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDotAtEndIsRejected() throws Exception {
-    Specifier.from("foo.bar.");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDuplicateDotIsRejected1() throws Exception {
-    Specifier.from("foo..bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDuplicateDotIsRejected2() throws Exception {
-    Specifier.from("foo\\\\..bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDuplicateDotIsRejected3() throws Exception {
-    Specifier.from("foo..\\\\bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDuplicateDotIsRejected4() throws Exception {
-    Specifier.from("foo...bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_specifierWithDuplicateDotIsRejected5() throws Exception {
-    Specifier.from("foo..\\.bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_isolatedBackslashesAreRejected1() throws Exception {
-    Specifier.from("foo\\bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_isolatedBackslashesAreRejected2() throws Exception {
-    Specifier.from("\\foo.bar");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testThat_isolatedBackslashesAreRejected3() throws Exception {
-    Specifier.from("foo.bar\\");
+  @Test
+  public void testThat_specifierWithDotAtStartIsRejected() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from(".foo.bar"));
   }
 
   @Test
-  public void testThat_escapingWorks() throws Exception {
+  public void testThat_specifierWithDotAtEndIsRejected() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo.bar."));
+  }
+
+  @Test
+  public void testThat_specifierWithDuplicateDotIsRejected1() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo..bar"));
+  }
+
+  @Test
+  public void testThat_specifierWithDuplicateDotIsRejected2() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo\\\\..bar"));
+  }
+
+  @Test
+  public void testThat_specifierWithDuplicateDotIsRejected3() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo..\\\\bar"));
+  }
+
+  @Test
+  public void testThat_specifierWithDuplicateDotIsRejected4() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo...bar"));
+  }
+
+  @Test
+  public void testThat_specifierWithDuplicateDotIsRejected5() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo..\\.bar"));
+  }
+
+  @Test
+  public void testThat_isolatedBackslashesAreRejected1() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo\\bar"));
+  }
+
+  @Test
+  public void testThat_isolatedBackslashesAreRejected2() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("\\foo.bar"));
+  }
+
+  @Test
+  public void testThat_isolatedBackslashesAreRejected3() {
+    assertThrows(IllegalArgumentException.class, () -> Specifier.from("foo.bar\\"));
+  }
+
+  @Test
+  public void testThat_escapingWorks() {
     assertThat(Specifier.from("foo\\.bar")).isEqualTo(new Specifier("foo.bar"));
 
     assertThat(Specifier.from("foo\\\\.bar")).isEqualTo(new Specifier("foo\\", "bar"));
@@ -88,7 +89,7 @@ public class SpecifierTest {
   }
 
   @Test
-  public void testThat_specifierCanBeReassenbled() throws Exception {
+  public void testThat_specifierCanBeReassenbled() {
     assertThat(Specifier.from("foo").asString()).isEqualTo("foo");
     assertThat(Specifier.from("foo.bar").asString()).isEqualTo("foo.bar");
 
@@ -97,7 +98,7 @@ public class SpecifierTest {
   }
 
   @Test
-  public void testThat_specifierElementAccessWorks() throws Exception {
+  public void testThat_specifierElementAccessWorks() {
     Specifier s = Specifier.from("foo.bar.baz");
 
     assertThat(s.head()).isEqualTo("foo");
@@ -106,7 +107,7 @@ public class SpecifierTest {
   }
 
   @Test
-  public void testThat_specifierLengthIsCorrect() throws Exception {
+  public void testThat_specifierLengthIsCorrect() {
     assertThat(Specifier.from("").length()).isEqualTo(0);
     assertThat(Specifier.from("foo").length()).isEqualTo(1);
     assertThat(Specifier.from("foo.bar").length()).isEqualTo(2);
@@ -121,7 +122,7 @@ public class SpecifierTest {
   }
 
   @Test
-  public void testThat_specifierTailIsCorect() throws Exception {
+  public void testThat_specifierTailIsCorect() {
     assertThat(Specifier.from("foo").suffix()).isEqualTo(Specifier.from(""));
     assertThat(Specifier.from("foo.bar").suffix()).isEqualTo(Specifier.from("bar"));
     assertThat(Specifier.from("foo.bar.baz").suffix()).isEqualTo(Specifier.from("bar.baz"));
@@ -131,7 +132,7 @@ public class SpecifierTest {
   }
 
   @Test
-  public void testThat_specifierPrefixMatchingIsCorect() throws Exception {
+  public void testThat_specifierPrefixMatchingIsCorect() {
     assertThat(Specifier.from("foo").startsWith("foo")).isTrue();
     assertThat(Specifier.from("foo.bar").startsWith("foo")).isTrue();
     assertThat(Specifier.from("foo.bar.baz").startsWith("foo")).isTrue();
@@ -147,28 +148,28 @@ public class SpecifierTest {
     assertThat(Specifier.from("foo.bar.baz").startsWith(Specifier.from("foo.bar.baz.yada"))).isFalse();
   }
 
-  @Test(expected = ArrayIndexOutOfBoundsException.class)
-  public void testThat_indexCheckingOnLeftWorks() throws Exception {
-    Specifier.from("foo.bar.baz").element(-1);
+  @Test
+  public void testThat_indexCheckingOnLeftWorks() {
+    assertThrows(ArrayIndexOutOfBoundsException.class, () -> Specifier.from("foo.bar.baz").element(-1));
   }
 
-  @Test(expected = ArrayIndexOutOfBoundsException.class)
-  public void testThat_indexCheckingOnRightWorks() throws Exception {
-    Specifier.from("foo.bar.baz").element(3);
+  @Test
+  public void testThat_indexCheckingOnRightWorks() {
+    assertThrows(ArrayIndexOutOfBoundsException.class, () -> Specifier.from("foo.bar.baz").element(3));
   }
 
-  @Test(expected = ArrayIndexOutOfBoundsException.class)
-  public void testThat_indexCheckingOnLeftWithOffsetWorks() throws Exception {
-    Specifier.from("foo.bar.baz").suffix().element(-1);
+  @Test
+  public void testThat_indexCheckingOnLeftWithOffsetWorks() {
+    assertThrows(ArrayIndexOutOfBoundsException.class, () -> Specifier.from("foo.bar.baz").suffix().element(-1));
   }
 
-  @Test(expected = ArrayIndexOutOfBoundsException.class)
-  public void testThat_indexCheckingForEmptySpecWorks() throws Exception {
-    Specifier.from("").head();
+  @Test
+  public void testThat_indexCheckingForEmptySpecWorks() {
+    assertThrows(ArrayIndexOutOfBoundsException.class, () -> Specifier.from("").head());
   }
 
-  @Test(expected = ArrayIndexOutOfBoundsException.class)
-  public void testThat_tailForEmptySpecWorks() throws Exception {
-    Specifier.from("").suffix();
+  @Test
+  public void testThat_tailForEmptySpecWorks() {
+    assertThrows(ArrayIndexOutOfBoundsException.class, () -> Specifier.from("").suffix());
   }
 }
