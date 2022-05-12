@@ -136,7 +136,6 @@ public class MultipartInputStream extends InputStream {
    * @return A byte of data, or <strong>-1</strong> if end of file.
    * @throws IOException If some IO error occured.
    */
-
   public int read() throws IOException {
     int ch;
     if (state != State.IN_PART)
@@ -148,29 +147,27 @@ public class MultipartInputStream extends InputStream {
         in.mark(boundary.length + 3);
         if (in.read() == '\n' && in.read() == '-' && in.read() == '-') {
           boolean isBoundary = true;
-          for (int i = 0; i < boundary.length; i++)
-            if (((byte) in.read()) != boundary[i]) {
+          for (byte b : boundary) {
+            if (((byte) in.read()) != b) {
               isBoundary = false;
               break;
             }
-
+          }
           if (isBoundary) {
             if (in.read() == '-') { // last part?
               if (in.read() != '-')
                 throw new IOException("Invalid part boundary: missing second end-of-stream dash");
               state = State.END_OF_STREAM;
-            } else
+            } else {
               state = State.END_OF_PART;
-
+            }
             in.reset();
             return -1;
           }
-        } else {
-          in.reset();
-          return ch;
         }
+        in.reset();
+        return ch;
 
-        // not reached
       case -1:
         state = State.END_OF_STREAM;
         return -1;
