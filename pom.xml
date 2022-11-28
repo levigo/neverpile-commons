@@ -14,7 +14,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
-    <spring-boot.version>2.6.3</spring-boot.version>
+    <spring-boot.version>2.7.6</spring-boot.version>
   </properties>
 
   <modules>
