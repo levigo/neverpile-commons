@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Bump version and push tag
       id: semanticversion
@@ -23,19 +23,13 @@ jobs:
         release_branches: master
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    ## Enable Caching
-    - uses: actions/cache@v1
+    ## Configure JDK 11 + maven cache
+    - name: Set up JDK
+      uses: actions/setup-java@v3
       with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
-
-    ## Configure JDK 11
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
+        distribution: 'temurin'
+        java-version: '11'
+        cache: 'maven'
 
     ## Build with maven
     - name: Prepare maven settings
@@ -57,10 +51,10 @@ jobs:
     ## Deploy
     - name: Deploy package
       env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
-            REPOSITORY_USERID: ${{ secrets.REPOSITORY_USERID }}
-            REPOSITORY_CREDENTIALS: ${{ secrets.REPOSITORY_CREDENTIALS }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
+        REPOSITORY_USERID: ${{ secrets.REPOSITORY_USERID }}
+        REPOSITORY_CREDENTIALS: ${{ secrets.REPOSITORY_CREDENTIALS }}
       run: |
         mkdir -p ~/.m2
         echo "<settings><servers><server><id>neverpile</id><username>${REPOSITORY_USERID}</username><password>${REPOSITORY_CREDENTIALS}</password></server></servers></settings>" > ~/.m2/settings.xml 
