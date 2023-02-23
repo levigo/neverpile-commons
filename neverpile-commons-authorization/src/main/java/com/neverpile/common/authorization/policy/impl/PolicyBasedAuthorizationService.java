@@ -47,7 +47,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
   @Autowired
   private PolicyRepository policyRepository;
 
-  @Autowired
+  @Autowired(required = false)
   private List<AuthenticationMatcher> authenticationMatchers;
 
   @Override
@@ -143,7 +143,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
     // if the default effect is ALLOW, add a final permission
     if (policy.getDefaultEffect() == Effect.ALLOW) {
       return Stream.concat(rulePermissions, Stream.of(new Permission(Effect.ALLOW, Arrays.asList(Action.ANY.key()))));
-   }
+    }
 
     return rulePermissions;
   }
@@ -161,7 +161,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
       return true;
     }
 
-    boolean m = authenticationMatchers.stream().anyMatch(am -> am.matchAuthentication(authentication, subjects));
+    boolean m = authenticationMatchers != null && authenticationMatchers.stream().anyMatch(am -> am.matchAuthentication(authentication, subjects));
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("  Rule '{}' {} the authenticated principal {} with authorities {}", rule.getName(),
@@ -228,7 +228,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
    * <code>NAMESPACE:SUB:*</code> matches all keys starting with <code>NAMESPACE:SUB:</code> etc.
    * (trailing wildcard match).
    * <ul>
-   * 
+   *
    * @param key the action key
    * @param actions the allowed action patterns
    * @return <code>true</code> if the action matches
@@ -243,7 +243,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
    * starting with {@code NAMESPACE:}, {@code NAMESPACE:SUB:*} matches all actions with keys
 
    * starting with {@code NAMESPACE:SUB:} etc.
-   * 
+   *
    * @param key the action key
    * @param actions the allowed action patterns
    * @return <code>true</code> if the action matches
