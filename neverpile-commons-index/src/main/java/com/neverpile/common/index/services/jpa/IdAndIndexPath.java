@@ -5,32 +5,32 @@ import java.io.Serializable;
 public class IdAndIndexPath implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private String collectionId;
+  private String objectId;
 
-  private String metadataPath;
+  private String indexPath;
 
   public String getObjectId() {
-    return collectionId;
+    return objectId;
   }
 
   public void setObjectId(final String id) {
-    this.collectionId = id;
+    this.objectId = id;
   }
 
   public String getIndexPath() {
-    return metadataPath;
+    return indexPath;
   }
 
   public void setIndexPath(final String metadataPath) {
-    this.metadataPath = metadataPath;
+    this.indexPath = metadataPath;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((collectionId == null) ? 0 : collectionId.hashCode());
-    result = prime * result + ((metadataPath == null) ? 0 : metadataPath.hashCode());
+    result = prime * result + ((objectId == null) ? 0 : objectId.hashCode());
+    result = prime * result + ((indexPath == null) ? 0 : indexPath.hashCode());
     return result;
   }
 
@@ -43,14 +43,14 @@ public class IdAndIndexPath implements Serializable {
     if (getClass() != obj.getClass())
       return false;
     IdAndIndexPath other = (IdAndIndexPath) obj;
-    if (collectionId == null) {
-      if (other.collectionId != null)
+    if (objectId == null) {
+      if (other.objectId != null)
         return false;
-    } else if (!collectionId.equals(other.collectionId))
+    } else if (!objectId.equals(other.objectId))
       return false;
-    if (metadataPath == null) {
-      return other.metadataPath == null;
+    if (indexPath == null) {
+      return other.indexPath == null;
     } else
-      return metadataPath.equals(other.metadataPath);
+      return indexPath.equals(other.indexPath);
   }
 }

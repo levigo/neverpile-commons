@@ -1,12 +1,10 @@
-package com.neverpile.fusion.jpa.collection.index;
+package com.neverpile.common.index.services.jpa;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
-
-import com.neverpile.common.index.services.jpa.IndexEntity;
 
 @StaticMetamodel(IndexEntity.class)
 public class IndexEntity_ {

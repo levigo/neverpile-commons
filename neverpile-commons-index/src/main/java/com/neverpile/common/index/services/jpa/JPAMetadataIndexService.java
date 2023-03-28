@@ -111,6 +111,7 @@ public class JPAMetadataIndexService implements IndexUpdateService {
       }
     } else if (jsonNode.isValueNode()) {
       ValueNode valueNode = (ValueNode) jsonNode;
+      // TODO: separate DataTypes
       targetMap.put(currentPath, valueNode.asText());
     }
   }

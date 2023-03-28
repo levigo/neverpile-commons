@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 @Table(name = "neverpile_index", indexes = { //
     @Index(name = "text_value_index", columnList = "indexPath, textValue"), //
     @Index(name = "datetime_value_index", columnList = "indexPath, dateTimeValue"), //
-    @Index(name = "numeric_value_index", columnList = "indexPath, numericValue"),
+    @Index(name = "numeric_value_index", columnList = "indexPath, numericValue"), //
     @Index(name = "boolean_value_index", columnList = "indexPath, booleanValue")
 })
 @IdClass(IdAndIndexPath.class)
