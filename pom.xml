@@ -17,6 +17,7 @@
 
   <modules>
     <module>neverpile-commons-condition</module>
+    <module>neverpile-commons-index</module>
     <module>neverpile-commons-openapi</module>
     <module>neverpile-commons-swagger-ui</module>
     <module>neverpile-commons-authorization</module>
