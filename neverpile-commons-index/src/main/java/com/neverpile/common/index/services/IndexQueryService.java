@@ -7,7 +7,7 @@ import com.neverpile.common.condition.Condition;
 
 /**
  * Service to run queries against the index. These {@link IndexQuery}s allow the use of complex combinations of
- * {@link Condition}s and filters to return a List of matching {@link IndexableObject}s.
+ * {@link Condition}s and filters to return a List of matching {@link Indexable}s.
  */
 public interface IndexQueryService {
 
@@ -18,5 +18,5 @@ public interface IndexQueryService {
    * @param searchQuery the query to use
    * @return List of matching documents
    */
-  List<IndexableObject> query(IndexQuery searchQuery);
+  List<Indexable> query(IndexQuery searchQuery);
 }

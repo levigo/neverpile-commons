@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -29,12 +30,16 @@ public class IndexEntity {
   @Id
   private String indexPath;
 
+  @Column(nullable = true)
   private String textValue;
 
+  @Column(nullable = true)
   private Instant dateTimeValue;
 
+  @Column(nullable = true)
   private BigDecimal numericValue;
 
+  @Column(nullable = true)
   private Boolean booleanValue;
 
 
@@ -112,7 +117,7 @@ public class IndexEntity {
   }
 
   public void setDateTimeValue(Instant dateTimeValue) {
-    dateTimeValue = dateTimeValue;
+    this.dateTimeValue = dateTimeValue;
   }
 
   public BigDecimal getNumericValue() {

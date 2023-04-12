@@ -4,13 +4,13 @@ import java.util.List;
 
 import com.neverpile.common.index.services.IndexQuery;
 import com.neverpile.common.index.services.IndexQueryService;
-import com.neverpile.common.index.services.IndexableObject;
+import com.neverpile.common.index.services.Indexable;
 
-public class JPAMetadataQueryService implements IndexQueryService {
+public class JPAQueryService implements IndexQueryService {
 
 
   @Override
-  public List<IndexableObject> query(IndexQuery searchQuery) {
+  public List<Indexable> query(IndexQuery searchQuery) {
     return null;
   }
 }

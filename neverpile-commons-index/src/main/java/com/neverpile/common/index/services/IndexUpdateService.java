@@ -12,21 +12,21 @@ public interface IndexUpdateService {
    *
    * @param obj new object to index
    */
-  void index(IndexableObject obj);
+  void index(Indexable obj);
 
   /**
    * Update index information for an object already in the index.
    *
    * @param obj object to update index information of
    */
-  void update(IndexableObject obj);
+  void update(Indexable obj);
 
   /**
    * delete object from the index.
    *
    * @param obj object to delete index information of
    */
-  void delete(IndexableObject obj);
+  void delete(Indexable obj);
 
   /**
    * Delete whole Index and reinitialized with current mapping information only.
