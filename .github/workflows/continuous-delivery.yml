@@ -5,7 +5,6 @@ on:
     branches:
       - master
     paths-ignore:
-      - '.github/**'
       - '**/README.md'
 
 jobs:
@@ -18,7 +17,7 @@ jobs:
 
     - name: Bump version and push tag
       id: semanticversion
-      uses: hennejg/github-tag-action@v4.3.1
+      uses: mathieudutour/github-tag-action@v6.1
       with:
         release_branches: master
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -81,13 +80,16 @@ jobs:
         branch: master
         github_token: ${{ secrets.GITHUB_TOKEN }}    
         
-    ## Notify Slack
-    - name: Notify slack
-      uses: hennejg/slack-build-notifier@v1.1
+    ## Notify Mattermost
+    - name: Notify Developers
+      uses: 8398a7/action-slack@v3
       with:
         username: GitHub
         icon_emoji: octocat
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref
         text: Released new version `${{ steps.semanticversion.outputs.new_version }}` of *${{ github.repository }}* to ${{ secrets.REPOSITORY_URL }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ github.actor != 'dependabot[bot]' }}
+
