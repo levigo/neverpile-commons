@@ -8,33 +8,9 @@ on:
       - '**/README.md'
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-      ## Configure JDK 11 + maven cache
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-        cache: 'maven'
-
-    ## Build with maven
-    - name: Perform build
-      run: mvn verify
-
-    ## Notify Mattermost
-    - name: Notify Developers
-      uses: 8398a7/action-slack@v3
-      with:
-        username: GitHub
-        icon_emoji: octocat
-        status: ${{ job.status }}
-        fields: repo,message,commit,author,action,eventName,ref
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: ${{ github.actor != 'dependabot[bot]' }}
+  call-continuous-integration:
+    uses: levigo/reusable-workflows/.github/workflows/continuous-integration.yml@v3
+    secrets: inherit
+    with:
+      mattermostChannel: 'neverpile-ci'
+      jdkVersion: '11'
