@@ -5,36 +5,13 @@ on:
     branches-ignore:
       - master
     paths-ignore:
-      - '.github/**'
       - '**/README.md'
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-      ## Configure JDK 11 + maven cache
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-        cache: 'maven'
-
-    ## Build with maven
-    - name: Perform build
-      run: mvn verify
-
-    ## Notify Slack
-    - name: Notify slack
-      uses: hennejg/slack-build-notifier@v1.1
-      with:
-        username: GitHub
-        icon_emoji: octocat
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
+  call-continuous-integration:
+    uses: levigo/reusable-workflows/.github/workflows/continuous-integration.yml@v3
+    secrets: inherit
+    with:
+      mattermostChannel: 'neverpile-ci'
+      matrix:  '{"jdk": [11]}'
+      sonarAnalysisEnabled: false
