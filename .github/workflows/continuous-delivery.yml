@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@8e3ab49979d3a502210030088de5ca3016f209b4
+    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@v3
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
