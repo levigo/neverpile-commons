@@ -52,17 +52,6 @@ public class TestTracer implements Tracer {
     }
 
     @Override
-    public Span startManual() {
-      new ASpan(tags, operationName);
-      return null;
-    }
-
-    @Override
-    public Scope startActive(final boolean finishSpanOnClose) {
-      return new AScope(new ASpan(tags, operationName));
-    }
-
-    @Override
     public Span start() {
       return new ASpan(tags, operationName);
     }
@@ -98,16 +87,6 @@ public class TestTracer implements Tracer {
     }
 
     @Override
-    public Scope active() {
-      return scope;
-    }
-
-    @Override
-    public Scope activate(final Span span, final boolean finishSpanOnClose) {
-      return null;
-    }
-
-    @Override
     public Scope activate(final Span span) {
       scope = new AScope(span);
       return null;
@@ -121,11 +100,6 @@ public class TestTracer implements Tracer {
       this.span = span;
     }
 
-    @Override
-    public Span span() {
-      return span;
-    }
-  
     @Override
     public void close() {
       // nothing to do
