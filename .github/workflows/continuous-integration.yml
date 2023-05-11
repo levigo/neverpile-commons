@@ -13,4 +13,4 @@ jobs:
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
-      jdkVersion: '11'
+      matrix:  '{"jdk": [11]}'
