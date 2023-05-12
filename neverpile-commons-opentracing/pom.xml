@@ -10,7 +10,7 @@
   <artifactId>neverpile-commons-opentracing</artifactId>
 
   <properties>
-    <opentracing.version>0.32.0</opentracing.version>
+    <opentracing.version>0.33.0</opentracing.version>
   </properties>
 
   <dependencies>
