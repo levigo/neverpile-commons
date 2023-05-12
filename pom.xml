@@ -65,7 +65,7 @@
           <excludes>
             <exclude>**/*IT.java</exclude>
           </excludes>
-          <forkMode>once</forkMode>
+          <forkCount>1</forkCount>
         </configuration>
       </plugin>
       <plugin>
@@ -74,7 +74,7 @@
         <version>3.1.0</version>
         <configuration>
           <skipITs>${skipIntegrationTests}</skipITs>
-          <forkMode>once</forkMode>
+          <forkCount>1</forkCount>
         </configuration>
         <executions>
           <execution>
