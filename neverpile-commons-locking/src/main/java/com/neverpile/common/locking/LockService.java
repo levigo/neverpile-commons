@@ -28,13 +28,16 @@ public interface LockService {
     private String ownerId;
     private Instant validUntil;
 
+    private String contestantId;
+
     public LockState() {
     }
 
-    public LockState(String ownerId, Instant validUntil) {
+    public LockState(String ownerId, Instant validUntil, String contestantId) {
       super();
       this.ownerId = ownerId;
       this.validUntil = validUntil;
+      this.contestantId = contestantId;
     }
 
     /**
@@ -71,6 +74,24 @@ public interface LockService {
      */
     public void setValidUntil(Instant validUntil) {
       this.validUntil = validUntil;
+    }
+
+    /**
+     * Get the current contestantId for the lock if any.
+     *
+     * @return the end of the validity period
+     */
+    public String getContestantId() {
+      return contestantId;
+    }
+
+    /**
+     * Set the current contestantId for the lock.
+     *
+     * @param contestantId set the contestantId for the corresponding lock.
+     */
+    public void setContestantId(String contestantId) {
+      this.contestantId = contestantId;
     }
 
     @Override

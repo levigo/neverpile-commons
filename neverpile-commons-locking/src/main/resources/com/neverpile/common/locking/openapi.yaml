@@ -197,6 +197,10 @@ components:
           format: date-time
           description: The end of the current validity period of the lock
 
+        contestantId:
+          type: string
+          description: The id of the contestant for the lock, if any
+
     LockRequestResult:
       description: |
         The result of a lock request.

@@ -59,7 +59,7 @@ public class LockServiceResourceTest {
     
     BDDMockito
       .given(mockLockService.queryLock(any()))
-      .willReturn(Optional.of(new LockState("anOwnerId", anInstant)));
+      .willReturn(Optional.of(new LockState("anOwnerId", anInstant, null)));
     
     // query existing lock
     LockState res = RestAssured.given()
@@ -107,7 +107,7 @@ public class LockServiceResourceTest {
     
     BDDMockito
       .given(mockLockService.tryAcquireLock(scopeC.capture(), ownerIdC.capture()))
-      .willReturn(new LockRequestResult(true, "aToken", new LockState("anOwnerId", anInstant)));
+      .willReturn(new LockRequestResult(true, "aToken", new LockState("anOwnerId", anInstant, null)));
     
     LockRequestResult res = RestAssured.given()
       .accept(ContentType.JSON)
@@ -163,7 +163,7 @@ public class LockServiceResourceTest {
 
     BDDMockito
       .given(mockLockService.extendLock(scopeC.capture(), tokenC.capture(), ownerIdC.capture()))
-      .willReturn(new LockState("anOwnerId", anInstant));
+      .willReturn(new LockState("anOwnerId", anInstant, null));
     
     LockState res = RestAssured.given()
       .accept(ContentType.JSON)

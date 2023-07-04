@@ -47,7 +47,7 @@ public class JPALockService implements LockService {
   @Autowired
   private LockingConfiguration lockingConfiguration;
 
-  private AtomicLong nextHousekeeping = new AtomicLong();
+  private final AtomicLong nextHousekeeping = new AtomicLong();
 
   @Override
   public LockRequestResult tryAcquireLock(String scope, String ownerId) {
@@ -67,18 +67,18 @@ public class JPALockService implements LockService {
       } else if (Objects.equals(lse.getOwnerId(), ownerId) && Objects.equals(lse.getLockToken(), token)) {
         try {
           LockState extendedLock = extendLock(scope, token, ownerId);
-          return new LockRequestResult(true, token, new LockState(lse.getOwnerId(), extendedLock.getValidUntil()));
+          return new LockRequestResult(true, token, new LockState(lse.getOwnerId(), extendedLock.getValidUntil(), lse.getContestant()));
         } catch (LockLostException e) {
-          return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
+          return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
         }
       } else {
-        return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
+        return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
       }
     }
 
     // prepare new lock
     LockState state = new LockState(ownerId,
-        Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
+        Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()), null);
 
     LockStateEntity lse = new LockStateEntity();
     lse.setScope(scope);
@@ -92,12 +92,12 @@ public class JPALockService implements LockService {
     } catch (EntityExistsException e) {
       // late lock collision - report as fail
       LockRequestResult failure = new LockRequestResult(false, null,
-          new LockState(lse.getOwnerId(), lse.getValidUntil()));
+          new LockState(lse.getOwnerId(), lse.getValidUntil(), null));
 
       // still try to tell the requester who owns the lock
       try {
         lockStateRepository.findById(scope).ifPresent(
-            existingLse -> failure.setState(new LockState(existingLse.getOwnerId(), existingLse.getValidUntil())));
+            existingLse -> failure.setState(new LockState(existingLse.getOwnerId(), existingLse.getValidUntil(), existingLse.getContestant())));
       } catch (PersistenceException f) {
         // ignore exceptions during this phase
         LOGGER.warn("Can't report actual owner on late collision", f);
@@ -146,7 +146,7 @@ public class JPALockService implements LockService {
           try {
             lockStateRepository.save(lse);
 
-            return new LockState(lse.getOwnerId(), lse.getValidUntil());
+            return new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant());
           } catch (EntityExistsException e) {
             // late lock collision - report as fail (fall out)
           }
@@ -183,7 +183,7 @@ public class JPALockService implements LockService {
   @Override
   public Optional<LockState> queryLock(String scope) {
     return lockStateRepository.findById(scope).map(
-        lse -> new LockService.LockState(lse.getOwnerId(), lse.getValidUntil()));
+        lse -> new LockService.LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
   }
 
   /**
