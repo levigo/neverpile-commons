@@ -105,4 +105,12 @@ public class LockServiceResource {
 
     return ResponseEntity.ok().build();
   }
+
+  @DeleteMapping(PREFIX + "/{scope}/contest")
+  @Timed(description = "resolve a lock contest", value = "fusion.lock.contest.resolve")
+  public ResponseEntity<?> resolveContest(@PathVariable("scope") final String scope,
+      @RequestParam("token") String token) {
+    lockService.resolveContest(scope, token);
+    return ResponseEntity.ok().build();
+  }
 }

@@ -179,6 +179,20 @@ paths:
           description: Lock successfully contested
         410:
           description: Can not contest this lock. (There is no lock for this scope or you are the locks owner)
+    delete:
+      summary: Resolve a lock contest by rejecting the contestant.
+
+      parameters:
+        - name: token
+          in: query
+          description: The secret token establishing ownership of the lock.
+          schema:
+            type: string
+          required: true
+
+      responses:
+        200:
+          description: contest resolved.
 
 components:
   schemas:

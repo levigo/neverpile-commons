@@ -81,4 +81,11 @@ public class NoOpLockServiceResource {
       @RequestParam(name = "contestantId", required = false) String contestantId) {
     return ResponseEntity.ok().build();
   }
+
+  @DeleteMapping(PREFIX + "/{scope}/contest")
+  @Timed(description = "resolve a lock contest", value = "fusion.lock.contest.resolve")
+  public ResponseEntity<?> resolveContest(@PathVariable("scope") final String scope,
+      @RequestParam("token") String token) {
+    return ResponseEntity.ok().build();
+  }
 }

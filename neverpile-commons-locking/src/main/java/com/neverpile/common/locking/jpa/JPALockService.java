@@ -132,6 +132,18 @@ public class JPALockService implements LockService {
   }
 
   @Override
+  public void resolveContest(String scope, String token) {
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
+    if (existing.isPresent()) {
+      LockStateEntity lse = existing.get();
+      if (Objects.equals(lse.getLockToken(), token)) {
+        lse.setContestant(null);
+        lockStateRepository.save(lse);
+      }
+    }
+  }
+
+  @Override
   public LockState extendLock(String scope, String token, String ownerId) throws LockLostException {
     Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 

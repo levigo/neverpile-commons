@@ -217,6 +217,9 @@ public interface LockService {
   boolean contestLock(String scope, String contestantId);
 
 
+  void resolveContest(String scope, String token);
+
+
   /**
    * Extend the validity of a lock. If the lock is currently held by the owner and associated with
    * the given token, the validity is extended and the new validity time is signaled as part of the
