@@ -223,4 +223,78 @@ public class JPALockServiceTest {
     // dummy1 must be expired
     assertThat(StreamSupport.stream(repository.findAll().spliterator(), false).count()).isEqualTo(1);
   }
+
+  @Test
+  public void testThat_lockCanBeContested() {
+    lockService.tryAcquireLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean result = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isTrue();
+
+    // verify repository contents
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+
+    assertThat(entry.getContestant()).isEqualTo("anContestantId");
+  }
+
+  @Test
+  public void testThat_scopeWithoutLockCantBeContested() {
+    boolean result = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  public void testThat_cantContestOwnLock() {
+    lockService.tryAcquireLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean result = lockService.contestLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isFalse();
+
+    // verify repository contents
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+
+    assertThat(entry.getContestant()).isNull();
+  }
+
+  @Test
+  public void testThat_canResolveContest() {
+    LockRequestResult lockResult = lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean contestResult = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    // verify lock is contested
+    assertThat(contestResult).isTrue();
+
+    TestTransaction.start();
+    lockService.resolveContest("dummy", lockResult.getToken());
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+    // verify contest is resolved
+    assertThat(entry.getContestant()).isNull();
+  }
 }

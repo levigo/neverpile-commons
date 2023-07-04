@@ -229,4 +229,46 @@ public class LockServiceResourceTest {
     assertThat(tokenC.getValue()).isEqualTo("aToken");
     // @formatter:on
   }
+
+  @Test
+  public void testThat_lockContestCanBeInitiated() {
+    // @formatter:off
+    BDDMockito
+        .given(mockLockService.contestLock(any(), any()))
+        .willReturn(true);
+
+    // store collection
+    RestAssured.given()
+        .accept(ContentType.JSON)
+        .param("contestantId", "anContestantId")
+        .when()
+        .log().all()
+        .post("/api/v1/locks/aScope/contest")
+        .then()
+        .log().all()
+        .statusCode(200);
+    // @formatter:on
+  }
+
+  @Test
+  public void testThat_lockContestCanBeResolved() {
+    ArgumentCaptor<String> scopeC = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> tokenC = ArgumentCaptor.forClass(String.class);
+
+    BDDMockito
+        .doNothing().when(mockLockService).resolveContest(scopeC.capture(), tokenC.capture());
+
+    RestAssured.given()
+        .accept(ContentType.JSON)
+        .param("token", "aToken")
+        .when()
+        .log().all()
+        .delete("/api/v1/locks/aScope/contest")
+        .then()
+        .log().all()
+        .statusCode(200);
+
+    assertThat(scopeC.getValue()).isEqualTo("aScope");
+    assertThat(tokenC.getValue()).isEqualTo("aToken");
+  }
 }
