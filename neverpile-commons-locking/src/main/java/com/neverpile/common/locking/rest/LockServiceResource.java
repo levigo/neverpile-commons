@@ -85,7 +85,7 @@ public class LockServiceResource {
     return ResponseEntity.noContent().build();
   }
 
-  @PostMapping(PREFIX + "/{scope}")
+  @PostMapping(PREFIX + "/{scope}/contest")
   @Timed(description = "try to contest a lock", value = "fusion.lock.contest")
   public ResponseEntity<?> contestLock(@PathVariable("scope") final String scope, final Principal principal,
       @RequestParam(name = "contestantId", required = false) String contestantId) throws NoContestException {
