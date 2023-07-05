@@ -1,7 +1,6 @@
 package com.neverpile.common.locking;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,18 +28,21 @@ public interface LockService {
     private String ownerId;
     private Instant validUntil;
 
+    private String contestantId;
+
     public LockState() {
     }
 
-    public LockState(String ownerId, Instant validUntil) {
+    public LockState(String ownerId, Instant validUntil, String contestantId) {
       super();
       this.ownerId = ownerId;
       this.validUntil = validUntil;
+      this.contestantId = contestantId;
     }
 
     /**
      * Get the id of the current lock owner.
-     * 
+     *
      * @return the owner id
      */
     public String getOwnerId() {
@@ -49,7 +51,7 @@ public interface LockService {
 
     /**
      * Set the owner id
-     * 
+     *
      * @param ownerId the owner id
      */
     public void setOwnerId(String ownerId) {
@@ -58,7 +60,7 @@ public interface LockService {
 
     /**
      * Get the end of the validity period of the lock.
-     * 
+     *
      * @return the end of the validity period
      */
     public Instant getValidUntil() {
@@ -67,11 +69,29 @@ public interface LockService {
 
     /**
      * Set the end of the validity period of the lock.
-     * 
+     *
      * @param validUntil the end of the validity period
      */
     public void setValidUntil(Instant validUntil) {
       this.validUntil = validUntil;
+    }
+
+    /**
+     * Get the current contestantId for the lock if any.
+     *
+     * @return the end of the validity period
+     */
+    public String getContestantId() {
+      return contestantId;
+    }
+
+    /**
+     * Set the current contestantId for the lock.
+     *
+     * @param contestantId set the contestantId for the corresponding lock.
+     */
+    public void setContestantId(String contestantId) {
+      this.contestantId = contestantId;
     }
 
     @Override
@@ -116,7 +136,7 @@ public interface LockService {
 
     /**
      * Return whether the request was successful.
-     * 
+     *
      * @return <code>true</code> if the request was successful
      */
     public boolean isSuccess() {
@@ -125,7 +145,7 @@ public interface LockService {
 
     /**
      * Set whether the request was successful.
-     * 
+     *
      * @param success Return whether the request was successful
      */
     public void setSuccess(boolean success) {
@@ -134,7 +154,7 @@ public interface LockService {
 
     /**
      * Get the secret lock token. Knowledge of the lock token asserts ownership of the lock.
-     * 
+     *
      * @return the lock token
      */
     public String getToken() {
@@ -143,7 +163,7 @@ public interface LockService {
 
     /**
      * Set the secret lock token.
-     * 
+     *
      * @param token the lock token
      */
     public void setToken(String token) {
@@ -152,7 +172,7 @@ public interface LockService {
 
     /**
      * Get the lock state.
-     * 
+     *
      * @return the lock state
      */
     public LockState getState() {
@@ -161,7 +181,7 @@ public interface LockService {
 
     /**
      * Set the lock state.
-     * 
+     *
      * @param state the lock state
      */
     public void setState(LockState state) {
@@ -173,40 +193,57 @@ public interface LockService {
    * An exception indicating that a lock extension request failed, because the lock has not been
    * refreshed in time and has been acquired by a third party.
    */
-  @ResponseStatus(
-      code = HttpStatus.GONE,
-      reason = "Lock has been acquired by other party")
+  @ResponseStatus(code = HttpStatus.GONE, reason = "Lock has been acquired by other party")
   public class LockLostException extends Exception {
     private static final long serialVersionUID = 1L;
   }
 
   /**
    * Try to acquire the lock for the given scope.
-   * 
-   * @param scope the lock scope
+   *
+   * @param scope   the lock scope
    * @param ownerId the id of the prospective lock owner
    * @return the LockRequestResult
    */
   LockRequestResult tryAcquireLock(String scope, String ownerId);
 
   /**
+   * Try to contest the lock for the given scope.
+   *
+   * @param scope        the lock scope
+   * @param contestantId the id of the contestant
+   * @return true if the lock is held by another user and is now contested, false otherwise
+   */
+  boolean contestLock(String scope, String contestantId);
+
+  /**
+   * Resolve a lock contest by rejecting the contestant.
+   * The current contestant, if any, will be removed from the Lock, and it's status.
+   *
+   * @param scope the lock scope
+   * @param token the secret lock token
+   */
+  void resolveContest(String scope, String token);
+
+
+  /**
    * Extend the validity of a lock. If the lock is currently held by the owner and associated with
    * the given token, the validity is extended and the new validity time is signaled as part of the
    * returned LockState. If the lock is currently held by another party, a {@link LockLostException}
    * is thrown. If the lock is currently not held by anyone, a silent re-acquire is attempted.
-   * 
-   * @param scope the lock scope
-   * @param token the secret lock token
+   *
+   * @param scope   the lock scope
+   * @param token   the secret lock token
    * @param ownerId the id of the lock owner
    * @return the new LockState
    * @throws LockLostException if the lock extension request failed, because the lock has not been
-   *           refreshed in time and this has been acquired by a third party.
+   *                           refreshed in time and this has been acquired by a third party.
    */
   LockState extendLock(String scope, String token, String ownerId) throws LockLostException;
 
   /**
    * Release a lock.
-   * 
+   *
    * @param scope the lock scope
    * @param token the secret lock token
    */
@@ -214,7 +251,7 @@ public interface LockService {
 
   /**
    * Query the state of a lock.
-   * 
+   *
    * @param scope the lock scope
    * @return the current lock state or the empty {@link Optional} if the lock does not exist
    */
@@ -222,11 +259,11 @@ public interface LockService {
 
   /**
    * Validate a lock token.
-   * 
+   *
    * @param scope the lock scope
    * @param token the lock token
    * @return <code>true</code> if the token is valid or the resource is not locked,
-   *         <code>false</code> otherwise.
+   * <code>false</code> otherwise.
    */
   boolean verifyLock(String scope, String token);
 }

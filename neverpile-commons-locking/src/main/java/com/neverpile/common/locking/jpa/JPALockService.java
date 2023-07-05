@@ -32,11 +32,8 @@ import com.neverpile.common.locking.LockingConfiguration;
  * The implementation will contribute the {@link LockStateEntity} to the general JPA context.
  */
 @Service
-@ConditionalOnProperty(
-    name = "neverpile.locking.jpa.enabled",
-    havingValue = "true")
-@ConditionalOnClass(
-    name = "javax.persistence.EntityManager")
+@ConditionalOnProperty(name = "neverpile.locking.jpa.enabled", havingValue = "true")
+@ConditionalOnClass(name = "javax.persistence.EntityManager")
 @ComponentScan
 @EntityScan
 @EnableJpaRepositories
@@ -50,7 +47,7 @@ public class JPALockService implements LockService {
   @Autowired
   private LockingConfiguration lockingConfiguration;
 
-  private AtomicLong nextHousekeeping = new AtomicLong();
+  private final AtomicLong nextHousekeeping = new AtomicLong();
 
   @Override
   public LockRequestResult tryAcquireLock(String scope, String ownerId) {
@@ -70,17 +67,18 @@ public class JPALockService implements LockService {
       } else if (Objects.equals(lse.getOwnerId(), ownerId) && Objects.equals(lse.getLockToken(), token)) {
         try {
           LockState extendedLock = extendLock(scope, token, ownerId);
-          return new LockRequestResult(true, token, new LockState(lse.getOwnerId(), extendedLock.getValidUntil()));
+          return new LockRequestResult(true, token, new LockState(lse.getOwnerId(), extendedLock.getValidUntil(), lse.getContestant()));
         } catch (LockLostException e) {
-          return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
+          return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
         }
       } else {
-        return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil()));
+        return new LockRequestResult(false, null, new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
       }
     }
 
     // prepare new lock
-    LockState state = new LockState(ownerId, Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
+    LockState state = new LockState(ownerId,
+        Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()), null);
 
     LockStateEntity lse = new LockStateEntity();
     lse.setScope(scope);
@@ -94,12 +92,12 @@ public class JPALockService implements LockService {
     } catch (EntityExistsException e) {
       // late lock collision - report as fail
       LockRequestResult failure = new LockRequestResult(false, null,
-          new LockState(lse.getOwnerId(), lse.getValidUntil()));
+          new LockState(lse.getOwnerId(), lse.getValidUntil(), null));
 
       // still try to tell the requester who owns the lock
       try {
         lockStateRepository.findById(scope).ifPresent(
-            existingLse -> failure.setState(new LockState(existingLse.getOwnerId(), existingLse.getValidUntil())));
+            existingLse -> failure.setState(new LockState(existingLse.getOwnerId(), existingLse.getValidUntil(), existingLse.getContestant())));
       } catch (PersistenceException f) {
         // ignore exceptions during this phase
         LOGGER.warn("Can't report actual owner on late collision", f);
@@ -112,6 +110,40 @@ public class JPALockService implements LockService {
   }
 
   @Override
+  public boolean contestLock(String scope, String contestantId) {
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
+
+    // handle existing lock:
+    if (existing.isPresent()) {
+      LockStateEntity lse = existing.get();
+      if (lse.getValidUntil().isBefore(Instant.now())) {
+        lockStateRepository.delete(lse);
+        return false; // lock is free.
+      } else if (Objects.equals(lse.getOwnerId(), contestantId)) {
+        return false; // contestant already owns the lock.
+      } else {
+        lse.setContestant(contestantId);
+        lockStateRepository.save(lse);
+        return true; // lock is now contested.
+      }
+    }
+
+    return false; // scope is not locked.
+  }
+
+  @Override
+  public void resolveContest(String scope, String token) {
+    Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
+    if (existing.isPresent()) {
+      LockStateEntity lse = existing.get();
+      if (Objects.equals(lse.getLockToken(), token)) {
+        lse.setContestant(null);
+        lockStateRepository.save(lse);
+      }
+    }
+  }
+
+  @Override
   public LockState extendLock(String scope, String token, String ownerId) throws LockLostException {
     Optional<LockStateEntity> existing = lockStateRepository.findById(scope);
 
@@ -119,13 +151,14 @@ public class JPALockService implements LockService {
       LockStateEntity lse = existing.get();
       if (lse.getValidUntil().isAfter(Instant.now())) {
         if (Objects.equals(lse.getLockToken(), token)) {
-          lse.setValidUntil(Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
+          lse.setValidUntil(
+              Instant.now().truncatedTo(ChronoUnit.MICROS).plus(lockingConfiguration.getValidityDuration()));
 
           // persist updated lock
           try {
             lockStateRepository.save(lse);
 
-            return new LockState(lse.getOwnerId(), lse.getValidUntil());
+            return new LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant());
           } catch (EntityExistsException e) {
             // late lock collision - report as fail (fall out)
           }
@@ -162,7 +195,7 @@ public class JPALockService implements LockService {
   @Override
   public Optional<LockState> queryLock(String scope) {
     return lockStateRepository.findById(scope).map(
-        lse -> new LockService.LockState(lse.getOwnerId(), lse.getValidUntil()));
+        lse -> new LockService.LockState(lse.getOwnerId(), lse.getValidUntil(), lse.getContestant()));
   }
 
   /**
@@ -183,10 +216,10 @@ public class JPALockService implements LockService {
   @Override
   public boolean verifyLock(String scope, String token) {
     return lockStateRepository.findById(scope).map(lse ->
-    // matching token?
-    lse.getLockToken().equals(token) ||
-    // expired lock state means "not locked"
-        Instant.now().isAfter(lse.getValidUntil()))
+            // matching token?
+            lse.getLockToken().equals(token) ||
+                // expired lock state means "not locked"
+                Instant.now().isAfter(lse.getValidUntil()))
         // not found -> ok as well.
         .orElse(true);
   }

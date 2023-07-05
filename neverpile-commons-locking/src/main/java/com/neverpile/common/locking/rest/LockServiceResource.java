@@ -28,9 +28,7 @@ import io.micrometer.core.annotation.Timed;
  */
 @RestController
 @ConditionalOnWebApplication
-@RequestMapping(
-    path = "/",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
 @ConditionalOnBean(LockService.class)
 public class LockServiceResource {
   public static final String PREFIX = "/api/v1/locks";
@@ -39,22 +37,15 @@ public class LockServiceResource {
   private LockService lockService;
 
   @GetMapping(PREFIX + "/{scope}")
-  @Timed(
-      description = "get lock status",
-      value = "fusion.lock.get")
+  @Timed(description = "get lock status", value = "fusion.lock.get")
   public LockState queryLock(@PathVariable("scope") final String scope) throws NotFoundException {
-    return lockService.queryLock(scope).orElseThrow(() -> new NotFoundException());
+    return lockService.queryLock(scope).orElseThrow(NotFoundException::new);
   }
 
   @PostMapping(PREFIX + "/{scope}")
-  @Timed(
-      description = "try to acquire a lock",
-      value = "fusion.lock.acquire")
+  @Timed(description = "try to acquire a lock", value = "fusion.lock.acquire")
   public LockRequestResult tryAcquireLock(@PathVariable("scope") final String scope, final Principal principal,
-      @RequestParam(
-          name = "ownerId",
-          required = false) String ownerId)
-      throws ConflictException {
+      @RequestParam(name = "ownerId", required = false) String ownerId) throws ConflictException {
     // derive owner id and name from principal if not explicitly set
     if (null == ownerId && null != principal)
       ownerId = principal.getName();
@@ -68,13 +59,9 @@ public class LockServiceResource {
   }
 
   @PutMapping(PREFIX + "/{scope}")
-  @Timed(
-      description = "extend a lock",
-      value = "fusion.lock.extend")
+  @Timed(description = "extend a lock", value = "fusion.lock.extend")
   public LockState extendLock(@PathVariable("scope") final String scope, @RequestParam("token") String token,
-      final Principal principal, @RequestParam(
-          name = "ownerId",
-          required = false) String ownerId)
+      final Principal principal, @RequestParam(name = "ownerId", required = false) String ownerId)
       throws LockLostException {
     // derive owner id and name from principal if not explicitly set
     if (null == ownerId && null != principal)
@@ -84,20 +71,46 @@ public class LockServiceResource {
   }
 
   @DeleteMapping(PREFIX + "/{scope}")
-  @Timed(
-      description = "release a lock",
-      value = "fusion.lock.release")
+  @Timed(description = "release a lock", value = "fusion.lock.release")
   public ResponseEntity<?> release(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
     lockService.releaseLock(scope, token);
     return ResponseEntity.noContent().build();
   }
-  
+
   @PostMapping("/api-noauth/v1/locks/{scope}/release")
-  @Timed(
-      description = "release a lock",
-      value = "fusion.lock.release")
-  public ResponseEntity<?> releaseNoauth(@PathVariable("scope") final String scope, @RequestParam("token") String token) {
+  @Timed(description = "release a lock", value = "fusion.lock.release")
+  public ResponseEntity<?> releaseNoauth(@PathVariable("scope") final String scope,
+      @RequestParam("token") String token) {
     lockService.releaseLock(scope, token);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping(PREFIX + "/{scope}/contest")
+  @Timed(description = "try to contest a lock", value = "fusion.lock.contest")
+  public ResponseEntity<?> contestLock(@PathVariable("scope") final String scope, final Principal principal,
+      @RequestParam(name = "contestantId", required = false) String contestantId) throws NoContestException {
+    // derive contestant id and name from principal if not explicitly set
+    if (null == contestantId) {
+      if (null != principal) {
+        contestantId = principal.getName();
+      } else {
+        contestantId = "unknown";
+      }
+    }
+
+    boolean result = lockService.contestLock(scope, contestantId);
+    if (!result) {
+      throw new NoContestException();
+    }
+
+    return ResponseEntity.ok().build();
+  }
+
+  @DeleteMapping(PREFIX + "/{scope}/contest")
+  @Timed(description = "resolve a lock contest", value = "fusion.lock.contest.resolve")
+  public ResponseEntity<?> resolveContest(@PathVariable("scope") final String scope,
+      @RequestParam("token") String token) {
+    lockService.resolveContest(scope, token);
+    return ResponseEntity.ok().build();
   }
 }

@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -38,7 +38,7 @@ public class JPALockServiceTest {
   @Autowired
   private LockStateRepository repository;
 
-  @AfterEach
+  @BeforeEach
   public void cleanup() {
     repository.deleteAll();
   }
@@ -54,8 +54,8 @@ public class JPALockServiceTest {
     assertThat(result.isSuccess()).isTrue();
     assertThat(result.getState().getOwnerId()).isEqualTo("anOwnerId");
     assertThat(result.getState().getValidUntil()).isAfter(start);
-    assertThat(result.getState().getValidUntil()).isBefore(Instant.now().plusSeconds(60)); // default
-                                                                                           // validity
+    // default validity
+    assertThat(result.getState().getValidUntil()).isBefore(Instant.now().plusSeconds(60));
     assertThat(result.getToken()).isNotEmpty();
 
     // verify repository contents
@@ -73,19 +73,19 @@ public class JPALockServiceTest {
     TestTransaction.end();
 
     assertThat(result.isSuccess()).isTrue();
-    
+
     Thread.sleep(5000);
     // lock will be expired by now!
-    
+
     TestTransaction.start();
     result = lockService.tryAcquireLock("dummy", "anotherOwnerId"); // different owner!
     TestTransaction.flagForCommit();
     TestTransaction.end();
-    
+
     assertThat(result.isSuccess()).isTrue();
     assertThat(result.getState().getOwnerId()).isEqualTo("anotherOwnerId");
   }
-  
+
   @Test
   public void testThat_lockCanBeReleased() {
     LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
@@ -121,7 +121,7 @@ public class JPALockServiceTest {
     assertThat(repository.findById("dummy").orElseThrow(
         () -> new AssertionError("lock not present")).getValidUntil()).isEqualTo(extended.getValidUntil());
   }
-  
+
   @Test
   public void testThat_lockCanBeExtendedWithSilentReAcquire() throws LockLostException, InterruptedException {
     LockRequestResult result = lockService.tryAcquireLock("dummy", "anOwnerId");
@@ -168,17 +168,17 @@ public class JPALockServiceTest {
 
     assertThat(fail.isSuccess()).isFalse();
   }
-  
+
   @Test
   public void testThat_acquisitionFailsOnCollisionWithSameUser() {
     lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.flagForCommit();
     TestTransaction.end();
-    
+
     TestTransaction.start();
     LockRequestResult fail = lockService.tryAcquireLock("dummy", "anOwnerId");
     TestTransaction.end();
-    
+
     assertThat(fail.isSuccess()).isFalse();
   }
 
@@ -222,5 +222,79 @@ public class JPALockServiceTest {
 
     // dummy1 must be expired
     assertThat(StreamSupport.stream(repository.findAll().spliterator(), false).count()).isEqualTo(1);
+  }
+
+  @Test
+  public void testThat_lockCanBeContested() {
+    lockService.tryAcquireLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean result = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isTrue();
+
+    // verify repository contents
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+
+    assertThat(entry.getContestant()).isEqualTo("anContestantId");
+  }
+
+  @Test
+  public void testThat_scopeWithoutLockCantBeContested() {
+    boolean result = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  public void testThat_cantContestOwnLock() {
+    lockService.tryAcquireLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean result = lockService.contestLock("dummy", "ownerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    assertThat(result).isFalse();
+
+    // verify repository contents
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+
+    assertThat(entry.getContestant()).isNull();
+  }
+
+  @Test
+  public void testThat_canResolveContest() {
+    LockRequestResult lockResult = lockService.tryAcquireLock("dummy", "anOwnerId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    boolean contestResult = lockService.contestLock("dummy", "anContestantId");
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    // verify lock is contested
+    assertThat(contestResult).isTrue();
+
+    TestTransaction.start();
+    lockService.resolveContest("dummy", lockResult.getToken());
+    TestTransaction.flagForCommit();
+    TestTransaction.end();
+
+    TestTransaction.start();
+    LockStateEntity entry = repository.findById("dummy").orElseThrow(() -> new AssertionError("lock not present"));
+    // verify contest is resolved
+    assertThat(entry.getContestant()).isNull();
   }
 }

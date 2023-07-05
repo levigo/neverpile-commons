@@ -7,27 +7,27 @@ info:
     url: https://levigo.de
     email: solutions@levigo.de
   version: 1.0.0
-  
+
 tags:
-- name: Locking
-  description: Locking service API
+  - name: Locking
+    description: Locking service API
 
 paths:
   /api/v1/locks/{scope}:
     parameters:
-    - name: scope
-      in: path
-      description: The scope of the lock to be dealt with
-      schema:
-        type: string
-      required: true
+      - name: scope
+        in: path
+        description: The scope of the lock to be dealt with
+        schema:
+          type: string
+        required: true
 
     get:
       summary: Query the current lock state
       description: Return the seen/unseen information for a certain context (as indicated by the given key) and a
         certain principal. Return an empty `SeenUnseenInfo` (indicating nothing has evern been
         seen) if no info has previously been persisted.
-        
+
       responses:
         200:
           description: Lock state found
@@ -37,48 +37,44 @@ paths:
                 $ref: '#/components/schemas/LockState'
         404:
           description: Lock not found - the scope is not currently locked
-                
+
     post:
       summary: Try to lock the given scope
       description: Try to acquire a lock for the given scope
       
       parameters:
-      - name: ownerId
-        in: query
-        description: The id of the prospective owner of the lock - if not 
+        - name: ownerId
+          in: query
+          description: The id of the prospective owner of the lock - if not
             provided, will try to derive the id from the authenticated principal.
-        schema:
-          type: string
-        required: false
-        
+          schema:
+            type: string
+          required: false
+
       responses:
         200:
           description: Lock created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LockRequestResult'
         409:
           description: The lock is currently owned by a third party
 
     put:
       summary: Extend the lock for the given scope.
-        
+
       parameters:
-      - name: token
-        in: query
-        description: The secret token establishing ownership of the lock.
-        schema:
-          type: string
-        required: true
-      - name: ownerId
-        in: query
-        description: The id of the prospective owner of the lock - if not 
+        - name: token
+          in: query
+          description: The secret token establishing ownership of the lock.
+          schema:
+            type: string
+          required: true
+        - name: ownerId
+          in: query
+          description: The id of the prospective owner of the lock - if not
             provided, will try to derive the id from the authenticated principal.
-        schema:
-          type: string
-        required: false
-                
+          schema:
+            type: string
+          required: false
+
       responses:
         200:
           description: Lock extended
@@ -91,54 +87,54 @@ paths:
           description: Lock lost - indicating that a lock extension request failed,
             because the lock has not been refreshed in time and has been acquired
             by a third party.
-          
+
     delete:
       summary: Release the lock for the given scope. If
-          the scope isn't currently locked, the caller isn't owner of the lock etc.
-          the request is silently ignored.
-        
+        the scope isn't currently locked, the caller isn't owner of the lock etc.
+        the request is silently ignored.
+
       parameters:
-      - name: token
-        in: query
-        description: The secret token establishing ownership of the lock. 
-        schema:
-          type: string
-        required: true
-        
+        - name: token
+          in: query
+          description: The secret token establishing ownership of the lock.
+          schema:
+            type: string
+          required: true
+
       responses:
         204:
           description: Lock deleted
   /api-noauth/v1/locks/{scope}/release:
     parameters:
-    - name: scope
-      in: path
-      description: The scope of the lock to be dealt with
-      schema:
-        type: string
-      required: true
+      - name: scope
+        in: path
+        description: The scope of the lock to be dealt with
+        schema:
+          type: string
+        required: true
     
     post:
       summary: Release the lock for the given scope using an unauthenticated GET request. This call is mainly
         intended to release locks upon closing a browser window/tab. As regular http calls are unrealiable
         during handling of `onBefureUnload`-events, the alternative `Navigator.sendBeacon()` API can be used
-        (see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon and 
+        (see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon and
         https://w3c.github.io/beacon for details). This api can only be used to send POST requests without
         the option to provide authentication headers. The `token` parameter can be provided in the query part
         or the form data.
-      
-        _Note:_ Authentication for the this form of operation is covered by the lock token. As lock tokens are 
-        generated using a cryptographically strong UUID, knowledge of the lock token qualifies as authentication.
-      
-        The base path `/api-noauth` is supposed to not be configured for authentication by the security configuration.
         
+        _Note:_ Authentication for the this form of operation is covered by the lock token. As lock tokens are
+        generated using a cryptographically strong UUID, knowledge of the lock token qualifies as authentication.
+        
+        The base path `/api-noauth` is supposed to not be configured for authentication by the security configuration.
+
       parameters:
-      - name: token
-        in: query
-        description: The secret token establishing ownership of the lock.
-          Either this parameter or the form data parameter of the same name is required.
-        schema:
-          type: string
-        required: false
+        - name: token
+          in: query
+          description: The secret token establishing ownership of the lock.
+            Either this parameter or the form data parameter of the same name is required.
+          schema:
+            type: string
+          required: false
       
       requestBody:
         required: false
@@ -149,43 +145,90 @@ paths:
               properties:
                 token:
                   type: string
-                  description: The secret token establishing ownership of the lock. 
+                  description: The secret token establishing ownership of the lock.
                     Either this parameter or the query parameter of the same name is required.
-                  
+
       responses:
         204:
           description: Lock deleted
+
+  /api/v1/locks/{scope}/contest:
+    parameters:
+      - name: scope
+        in: path
+        description: The scope of the lock to be dealt with
+        schema:
+          type: string
+        required: true
+
+    post:
+      summary: Try to contest a lock
+      description: If a lock is held by another owner this function can be used to contest the lock and inform the
+        current owner about the conflict.
+      parameters:
+        - name: contestantId
+          in: query
+          description: The id of the contestant for the lock - if not provided, will try to derive the id from the
+            authenticated principal.
+          schema:
+            type: string
+          required: false
+
+      responses:
+        200:
+          description: Lock successfully contested
+        410:
+          description: Can not contest this lock. (There is no lock for this scope or you are the lock's owner)
+    delete:
+      summary: Resolve a lock contest by rejecting the contestant.
+
+      parameters:
+        - name: token
+          in: query
+          description: The secret token establishing ownership of the lock.
+          schema:
+            type: string
+          required: true
+
+      responses:
+        200:
+          description: contest resolved.
+
 components:
   schemas:
     LockState:
       description: |
         The lock state describes the state of a lock for a certain scope.
-        
+
       type: object
       properties:
         ownerId:
           type: string
           description: The id of the owner of the lock
-          
+
         validUntil:
           type: string
           format: date-time
           description: The end of the current validity period of the lock
-          
+
+        contestantId:
+          type: string
+          description: The id of the contestant for the lock, if any
+
     LockRequestResult:
       description: |
         The result of a lock request.
-        
+
       type: object
       properties:
         token:
           type: string
           description: The secret lock token.
-          
+
         success:
           type: boolean
           description: Always true
-          
+
         state:
           $ref: '#/components/schemas/LockState'
             

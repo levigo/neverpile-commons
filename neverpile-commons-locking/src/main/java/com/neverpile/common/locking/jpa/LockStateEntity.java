@@ -10,8 +10,7 @@ import javax.persistence.Table;
  * An entity representing a lock's state.
  */
 @Entity
-@Table(
-    name = "locks")
+@Table(name = "locks")
 public class LockStateEntity {
   @Id
   private String scope;
@@ -21,6 +20,8 @@ public class LockStateEntity {
   private Instant validUntil;
 
   private String lockToken;
+
+  private String contestant;
 
   public String getScope() {
     return scope;
@@ -52,5 +53,13 @@ public class LockStateEntity {
 
   public void setLockToken(String lockId) {
     this.lockToken = lockId;
+  }
+
+  public String getContestant() {
+    return contestant;
+  }
+
+  public void setContestant(String contestant) {
+    this.contestant = contestant;
   }
 }
