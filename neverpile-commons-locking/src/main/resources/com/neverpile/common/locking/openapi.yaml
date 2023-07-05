@@ -178,7 +178,7 @@ paths:
         200:
           description: Lock successfully contested
         410:
-          description: Can not contest this lock. (There is no lock for this scope or you are the locks owner)
+          description: Can not contest this lock. (There is no lock for this scope or you are the lock's owner)
     delete:
       summary: Resolve a lock contest by rejecting the contestant.
 

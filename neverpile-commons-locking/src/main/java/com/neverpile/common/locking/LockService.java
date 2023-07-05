@@ -216,7 +216,13 @@ public interface LockService {
    */
   boolean contestLock(String scope, String contestantId);
 
-
+  /**
+   * Resolve a lock contest by rejecting the contestant.
+   * The current contestant, if any, will be removed from the Lock, and it's status.
+   *
+   * @param scope the lock scope
+   * @param token the secret lock token
+   */
   void resolveContest(String scope, String token);
 
 
