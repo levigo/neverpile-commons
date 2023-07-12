@@ -173,15 +173,14 @@ paths:
           schema:
             type: string
           required: false
-
       responses:
         200:
           description: Lock successfully contested
-        410:
+        400:
           description: Can not contest this lock. (There is no lock for this scope or you are the lock's owner)
+
     delete:
       summary: Resolve a lock contest by rejecting the contestant.
-
       parameters:
         - name: token
           in: query
@@ -189,7 +188,6 @@ paths:
           schema:
             type: string
           required: true
-
       responses:
         200:
           description: contest resolved.
