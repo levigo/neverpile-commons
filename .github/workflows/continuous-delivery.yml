@@ -9,11 +9,12 @@ on:
 
 jobs:
   build:
-    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@v3
+    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@feat/INF-28_license-check
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
       jdkVersion: '11'
+      multiModule: true
   updateReadme:
     needs: build
     uses: levigo/reusable-workflows/.github/workflows/update-readme-md.yml@v3

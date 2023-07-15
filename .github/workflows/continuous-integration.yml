@@ -9,9 +9,10 @@ on:
 
 jobs:
   call-continuous-integration:
-    uses: levigo/reusable-workflows/.github/workflows/continuous-integration.yml@v3
+    uses: levigo/reusable-workflows/.github/workflows/continuous-integration.yml@feat/INF-28_license-check
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
       matrix:  '{"jdk": [11]}'
       sonarAnalysisEnabled: false
+      multiModule: true
