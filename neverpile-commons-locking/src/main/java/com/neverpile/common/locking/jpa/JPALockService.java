@@ -33,7 +33,7 @@ import jakarta.persistence.PersistenceException;
  */
 @Service
 @ConditionalOnProperty(name = "neverpile.locking.jpa.enabled", havingValue = "true")
-@ConditionalOnClass(name = "javax.persistence.EntityManager")
+@ConditionalOnClass(name = "jakarta.persistence.EntityManager")
 @ComponentScan
 @EntityScan
 @EnableJpaRepositories
