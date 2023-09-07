@@ -15,9 +15,9 @@ public class BaseTestConfiguration {
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     // @formatter:off
     http
-        .cors().and()
+        .cors(AbstractHttpConfigurer::disable)
         .csrf(AbstractHttpConfigurer::disable)
-        .authorizeRequests().anyRequest().anonymous()
+        .authorizeHttpRequests(a -> a.anyRequest().anonymous())
     ;
     // @formatter:on
     return http.build();
