@@ -1,4 +1,4 @@
-package com.beverpile.common.opentracingtest;
+package com.neverpile.common.opentracingtest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
