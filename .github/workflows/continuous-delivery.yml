@@ -13,7 +13,7 @@ jobs:
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
-      jdkVersion: '11'
+      jdkVersion: '17'
   updateReadme:
     needs: build
     uses: levigo/reusable-workflows/.github/workflows/update-readme-md.yml@v3
