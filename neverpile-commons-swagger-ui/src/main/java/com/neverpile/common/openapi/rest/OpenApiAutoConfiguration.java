@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration
 @EnableWebMvc
-@ConditionalOnProperty(name = "neverpile.swagger-ui.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "stage", havingValue = "test")
 public class OpenApiAutoConfiguration {
   @Bean
   public OpenApiDefinitionResource openApiDefinitionResource() {
