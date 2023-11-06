@@ -1,4 +1,4 @@
-package com.neverpile.common.opentracingtest;
+package com.beverpile.common.opentracingtest;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;

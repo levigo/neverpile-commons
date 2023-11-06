@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.persistence.EntityExistsException;
+import javax.persistence.PersistenceException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.neverpile.common.locking.LockService;
 import com.neverpile.common.locking.LockingConfiguration;
 
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.PersistenceException;
-
 /**
  * A JPA-based implementation of {@link LockService}. To enable it, JPA must be configured in the
  * environment and the property <code>neverpile.locking.jpa.enabled</code> must be set to
@@ -33,7 +33,7 @@ import jakarta.persistence.PersistenceException;
  */
 @Service
 @ConditionalOnProperty(name = "neverpile.locking.jpa.enabled", havingValue = "true")
-@ConditionalOnClass(name = "jakarta.persistence.EntityManager")
+@ConditionalOnClass(name = "javax.persistence.EntityManager")
 @ComponentScan
 @EntityScan
 @EnableJpaRepositories

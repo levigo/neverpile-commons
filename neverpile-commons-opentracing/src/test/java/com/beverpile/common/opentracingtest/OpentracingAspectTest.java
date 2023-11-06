@@ -1,4 +1,4 @@
-package com.neverpile.common.opentracingtest;
+package com.beverpile.common.opentracingtest;
 
 import static org.assertj.core.api.Assertions.*;
 

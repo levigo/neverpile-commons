@@ -1,4 +1,4 @@
-package com.neverpile.common.opentracingtest;
+package com.beverpile.common.opentracingtest;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
