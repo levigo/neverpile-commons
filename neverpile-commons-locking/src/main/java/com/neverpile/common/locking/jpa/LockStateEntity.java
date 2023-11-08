@@ -2,9 +2,9 @@ package com.neverpile.common.locking.jpa;
 
 import java.time.Instant;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * An entity representing a lock's state.

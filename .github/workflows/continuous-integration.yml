@@ -13,5 +13,5 @@ jobs:
     secrets: inherit
     with:
       mattermostChannel: 'neverpile-ci'
-      matrix:  '{"jdk": [11]}'
+      matrix:  '{"jdk": [17]}'
       sonarAnalysisEnabled: false
