@@ -40,6 +40,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+<!--      TODO: delete the following dependencies when spring-boot provide a newer version of them without vulnerabilities -->
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
