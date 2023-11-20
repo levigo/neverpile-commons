@@ -15,6 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>3.1.5</spring-boot.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
   </properties>
 
   <modules>
@@ -37,6 +38,12 @@
         <version>${spring-boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+<!--      TODO: delete the following dependencies when spring-boot provide a newer version of them without vulnerabilities -->
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

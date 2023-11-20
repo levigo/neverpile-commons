@@ -8,6 +8,10 @@
   </parent>
   <artifactId>neverpile-commons-locking</artifactId>
 
+  <properties>
+    <h2.version>2.2.224</h2.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -38,6 +42,7 @@
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <scope>test</scope>
+      <version>${h2.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
