@@ -44,7 +44,7 @@ public class SomeTracedService {
   }
   
   @TraceInvocation
-  public void selfNamingParam(@Tag final String foo) {
+  public void selfNamingParam(@Tag(name="foo") final String foo) {
     invocationCounter++;
   }
 
