@@ -10,7 +10,7 @@
   <artifactId>neverpile-commons-opentelemetry</artifactId>
 
   <properties>
-    <opentelemetry.version>1.33.0</opentelemetry.version>
+    <opentelemetry.version>1.34.1</opentelemetry.version>
   </properties>
 
   <dependencies>
