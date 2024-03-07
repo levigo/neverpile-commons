@@ -12,6 +12,6 @@ jobs:
     uses: levigo/reusable-workflows/.github/workflows/continuous-integration.yml@v3
     secrets: inherit
     with:
-      mattermostChannel: 'neverpile-ci'
+      notifyMattermost: false
       matrix:  '{"jdk": [17]}'
       sonarAnalysisEnabled: false

@@ -11,9 +11,6 @@ jobs:
   build:
     uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@v3
     secrets: inherit
-    with:
-      mattermostChannel: 'neverpile-ci'
-      jdkVersion: '17'
   updateReadme:
     needs: build
     uses: levigo/reusable-workflows/.github/workflows/update-readme-md.yml@v3
