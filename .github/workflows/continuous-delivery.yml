@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@v3
+    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@latest
     secrets: inherit
   updateReadme:
     needs: build
