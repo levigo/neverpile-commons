@@ -14,4 +14,3 @@ jobs:
     with:
       notifyMattermost: false
       matrix:  '{"jdk": [17]}'
-      sonarAnalysisEnabled: false
