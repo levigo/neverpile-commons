@@ -9,13 +9,13 @@ on:
 
 jobs:
   build:
-    uses: levigo/reusable-workflows/.github/workflows/continuous-delivery-np.yml@latest
+    uses: levigo/reusable-workflows-pub/.github/workflows/continuous-delivery-np.yml@latest
     secrets: inherit
     with:
       multiModule: true
   updateReadme:
     needs: build
-    uses: levigo/reusable-workflows/.github/workflows/update-readme-md.yml@v3
+    uses: levigo/reusable-workflows-pub/.github/workflows/update-readme-md.yml@v1
     secrets: inherit
     with:
       releaseVersion: ${{ needs.build.outputs.releaseVersion }}
