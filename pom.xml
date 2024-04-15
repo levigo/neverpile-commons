@@ -14,7 +14,7 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <spring-boot.version>3.2.3</spring-boot.version>
+    <spring-boot.version>3.2.4</spring-boot.version>
   </properties>
 
   <modules>
@@ -55,7 +55,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
+        <version>3.13.0</version>
         <configuration>
           <release>${java.version}</release>
           <!-- required for [Parameter Name Discovery](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.2-Release-Notes#parameter-name-discovery) -->
@@ -65,7 +65,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.3</version>
+        <version>3.2.5</version>
         <configuration>
           <excludes>
             <exclude>**/*IT.java</exclude>
@@ -76,7 +76,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.2.3</version>
+        <version>3.2.5</version>
         <configuration>
           <skipITs>${skipIntegrationTests}</skipITs>
           <forkCount>1</forkCount>
@@ -93,7 +93,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
