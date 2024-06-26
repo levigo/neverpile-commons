@@ -15,7 +15,7 @@ jobs:
       multiModule: true
   updateReadme:
     needs: build
-    uses: levigo/reusable-workflows-pub/.github/workflows/update-readme-md.yml@v1
+    uses: levigo/reusable-workflows-pub/.github/workflows/update-readme-md.yml@latest
     secrets: inherit
     with:
       releaseVersion: ${{ needs.build.outputs.releaseVersion }}

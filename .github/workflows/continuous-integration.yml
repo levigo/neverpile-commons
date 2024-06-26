@@ -9,8 +9,9 @@ on:
 
 jobs:
   call-continuous-integration:
-    uses: levigo/reusable-workflows-pub/.github/workflows/continuous-integration.yml@v1
+    uses: levigo/reusable-workflows-pub/.github/workflows/continuous-integration.yml@latest
     secrets: inherit
     with:
       notifyMattermost: false
       matrix:  '{"jdk": [17]}'
+      multiModule: true
