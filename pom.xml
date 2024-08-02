@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>3.2.7</spring-boot.version>
-    <jadice-license.version>0.11.4</jadice-license.version>
+    <jadice-license.version>0.12.0</jadice-license.version>
   </properties>
 
   <modules>
