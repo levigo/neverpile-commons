@@ -59,19 +59,19 @@ public final class LCServ {
   }
 
   /**
-   * Returns the product variant based on the provided license information and the product name.
-   * If the license is expired, not provided or not valid, the product variant will be "basic".
+   * Returns the product name based on the provided license information.
+   * If the license is expired, the function will return null.
    *
    * @return the product variant as a string
    */
-  public String getProductVariant() {
+  public String getProductName() {
     if (handler != null && handler.product() != null && !handler.license().isExpired()) {
       String productName = handler.product().name();
       if (productName.toLowerCase().contains(VariantConstant.ADVANCED)) {
-        return VariantConstant.ADVANCED;
+        return productName.toLowerCase();
       }
     }
-    return VariantConstant.BASIC;
+    return null;
   }
 
 }
