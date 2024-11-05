@@ -9,10 +9,6 @@
 
   <artifactId>neverpile-commons-opentelemetry</artifactId>
 
-  <properties>
-    <opentelemetry.version>1.37.0</opentelemetry.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -22,7 +18,6 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>${opentelemetry.version}</version>
     </dependency>
 
     <dependency>
