@@ -75,7 +75,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     List<AccessRule> matchingRules = policy.getRules().stream() //
-        .filter(authentication.isAuthenticated() //
+        .filter(null != authentication && authentication.isAuthenticated() //
             ? (r) -> matchesAuthentication(r, authentication) //
             : this::matchesAnonymousUser) //
         .filter(r -> matchesResource(r, resourceSpecifier)) //
@@ -101,7 +101,7 @@ public class PolicyBasedAuthorizationService implements AuthorizationService {
         policy.getDefaultEffect() != null ? policy.getDefaultEffect() : Effect.DENY;
 
     LOGGER.debug("Authorization for {} on {} with principal {}: {}", actions, resourceSpecifier,
-        authentication.isAuthenticated() ? authentication.getPrincipal() : "anonymous", e);
+        authentication != null && authentication.isAuthenticated() ? authentication.getPrincipal() : "anonymous", e);
 
     return e == Effect.ALLOW;
   }
