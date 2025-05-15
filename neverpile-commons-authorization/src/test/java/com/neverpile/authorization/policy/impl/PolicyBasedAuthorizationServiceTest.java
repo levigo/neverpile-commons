@@ -391,4 +391,287 @@ public class PolicyBasedAuthorizationServiceTest {
     assertThat(authService.isAccessAllowed("foo", actionSet("deniedByWildcard:bar"), eac)).isFalse();
     assertThat(authService.isAccessAllowed("foo", actionSet("deniedByWildcard:bar:baz"), eac)).isFalse();
   }
+
+  @Test
+  public void testThat_allActionsAreDeniedIfDefaultEffectIsDenyAndNoMatchingRule() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule rule = new AccessRule();
+      rule.setEffect(Effect.ALLOW);
+      rule.setSubjects(Arrays.asList("authenticated"));
+      rule.setResources(Arrays.asList("*"));
+      rule.setActions(Arrays.asList("*"));
+      accessPolicy.getRules().add(rule);
+
+      return accessPolicy;
+    });
+
+    // Simulate an unauthenticated user
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("noone", "noone"));
+
+    // All actions should be denied for unauthenticated user
+    assertThat(authService.isAccessAllowed("foo", actionSet("anyAction"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("anotherAction"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("read", "write", "delete"), eac)).isFalse();
+
+    // Simulate an authenticated user
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
+
+    // All actions should be allowed for authenticated user (covered by rule)
+    assertThat(authService.isAccessAllowed("foo", actionSet("anyAction"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("foo", actionSet("read", "write", "delete"), eac)).isTrue();
+  }
+
+  @Test
+  public void testThat_defaultEffectDenyAndNoRulesMeansAllDenied() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+      // No rules
+      return accessPolicy;
+    });
+
+    assertThat(authService.isAccessAllowed("foo", actionSet("read"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("write"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("delete"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_defaultEffectAllowAndNoRulesMeansAllAllowed() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.ALLOW);
+      // No rules
+      return accessPolicy;
+    });
+
+    assertThat(authService.isAccessAllowed("foo", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("foo", actionSet("write"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("foo", actionSet("delete"), eac)).isTrue();
+  }
+
+  @Test
+  public void testThat_explicitDenyOverridesDefaultAllow() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.ALLOW);
+
+      AccessRule denyRule = new AccessRule();
+      denyRule.setEffect(Effect.DENY);
+      denyRule.setSubjects(Arrays.asList("*"));
+      denyRule.setResources(Arrays.asList("*"));
+      denyRule.setActions(Arrays.asList("delete"));
+      accessPolicy.getRules().add(denyRule);
+
+      return accessPolicy;
+    });
+
+    assertThat(authService.isAccessAllowed("foo", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("foo", actionSet("delete"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("write", "delete"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_explicitAllowOverridesDefaultDeny() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule allowRule = new AccessRule();
+      allowRule.setEffect(Effect.ALLOW);
+      allowRule.setSubjects(Arrays.asList("*"));
+      allowRule.setResources(Arrays.asList("*"));
+      allowRule.setActions(Arrays.asList("read"));
+      accessPolicy.getRules().add(allowRule);
+
+      return accessPolicy;
+    });
+
+    assertThat(authService.isAccessAllowed("foo", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("foo", actionSet("write"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("foo", actionSet("read", "write"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_multipleRulesFirstMatchWins() {
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule denyRule = new AccessRule();
+      denyRule.setEffect(Effect.DENY);
+      denyRule.setSubjects(Arrays.asList("*"));
+      denyRule.setResources(Arrays.asList("*"));
+      denyRule.setActions(Arrays.asList("read"));
+      accessPolicy.getRules().add(denyRule);
+
+      AccessRule allowRule = new AccessRule();
+      allowRule.setEffect(Effect.ALLOW);
+      allowRule.setSubjects(Arrays.asList("*"));
+      allowRule.setResources(Arrays.asList("*"));
+      allowRule.setActions(Arrays.asList("read", "write"));
+      accessPolicy.getRules().add(allowRule);
+
+      return accessPolicy;
+    });
+
+    // "read" matches first rule (DENY), so denied
+    assertThat(authService.isAccessAllowed("foo", actionSet("read"), eac)).isFalse();
+    // "write" matches second rule (ALLOW), so allowed
+    assertThat(authService.isAccessAllowed("foo", actionSet("write"), eac)).isTrue();
+    // "read" and "write" together: since "read" is denied, overall should be denied
+    assertThat(authService.isAccessAllowed("foo", actionSet("read", "write"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_policyAllowsAllActionsForAuthenticatedUser() {
+    // This matches the provided JSON policy: allow everything for "authenticated", default DENY
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule rule = new AccessRule();
+      rule.setEffect(Effect.ALLOW);
+      rule.setSubjects(Arrays.asList("authenticated"));
+      rule.setResources(Arrays.asList("*"));
+      rule.setActions(Arrays.asList("*"));
+      accessPolicy.getRules().add(rule);
+
+      return accessPolicy;
+    });
+
+    // Simulate an authenticated user
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
+
+    // Test standard CRUD actions
+    assertThat(authService.isAccessAllowed("document", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("write"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("update"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("delete"), eac)).isTrue();
+
+    // Test custom actions
+    assertThat(authService.isAccessAllowed("document", actionSet("share"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("archive"), eac)).isTrue();
+
+    // Test actions with namespaces
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("workflow:approve"), eac)).isTrue();
+  }
+
+  @Test
+  public void testThat_modifiedPolicyAllowsSpecificActionsOnly() {
+    // Modified JSON policy: allow only read and metadata actions for authenticated users
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule rule = new AccessRule();
+      rule.setEffect(Effect.ALLOW);
+      rule.setSubjects(Arrays.asList("authenticated"));
+      rule.setResources(Arrays.asList("*"));
+      rule.setActions(Arrays.asList("read", "document:metadata:*"));
+      accessPolicy.getRules().add(rule);
+
+      return accessPolicy;
+    });
+
+    // Simulate an authenticated user
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
+
+    // Test allowed actions
+    assertThat(authService.isAccessAllowed("document", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:write"), eac)).isTrue();
+
+    // Test denied actions
+    assertThat(authService.isAccessAllowed("document", actionSet("write"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("document", actionSet("delete"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("document", actionSet("workflow:approve"), eac)).isFalse();
+
+    // Test combinations
+    assertThat(authService.isAccessAllowed("document", actionSet("read", "document:metadata:write"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("read", "write"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_roleBasedPolicyWorksWithActions() {
+    // Role-based policy with different action permissions for different roles
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      // Admin role can do everything
+      AccessRule adminRule = new AccessRule();
+      adminRule.setEffect(Effect.ALLOW);
+      adminRule.setSubjects(Arrays.asList("role:ADMIN"));
+      adminRule.setResources(Arrays.asList("*"));
+      adminRule.setActions(Arrays.asList("*"));
+      accessPolicy.getRules().add(adminRule);
+
+      // User role can only read and view metadata
+      AccessRule userRule = new AccessRule();
+      userRule.setEffect(Effect.ALLOW);
+      userRule.setSubjects(Arrays.asList("role:USER"));
+      userRule.setResources(Arrays.asList("*"));
+      userRule.setActions(Arrays.asList("read", "document:metadata:read"));
+      accessPolicy.getRules().add(userRule);
+
+      return accessPolicy;
+    });
+
+    // Test admin role
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("admin", "pass", "ADMIN"));
+    assertThat(authService.isAccessAllowed("document", actionSet("read", "write", "delete"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:write"), eac)).isTrue();
+
+    // Test user role
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
+    assertThat(authService.isAccessAllowed("document", actionSet("read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("write"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:write"), eac)).isFalse();
+
+    // Test combination for user role
+    assertThat(authService.isAccessAllowed("document", actionSet("read", "document:metadata:read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("read", "write"), eac)).isFalse();
+  }
+
+  @Test
+  public void testThat_hierarchicalActionsWorkCorrectly() {
+    // Test hierarchical action patterns with wildcards
+    given(mockPolicyRepository.getCurrentPolicy()).will(i -> {
+      AccessPolicy accessPolicy = new AccessPolicy();
+      accessPolicy.setDefaultEffect(Effect.DENY);
+
+      AccessRule rule = new AccessRule();
+      rule.setEffect(Effect.ALLOW);
+      rule.setSubjects(Arrays.asList("authenticated"));
+      rule.setResources(Arrays.asList("*"));
+      rule.setActions(Arrays.asList("document:metadata:*", "workflow:*"));
+      accessPolicy.getRules().add(rule);
+
+      return accessPolicy;
+    });
+
+    // Simulate an authenticated user
+    SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", "pass", "USER"));
+
+    // Test wildcard matches
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:read"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:metadata:write"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("workflow:start"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document", actionSet("workflow:approve"), eac)).isTrue();
+
+    // Test non-matching actions
+    assertThat(authService.isAccessAllowed("document", actionSet("read"), eac)).isFalse();
+    assertThat(authService.isAccessAllowed("document", actionSet("document:content:read"), eac)).isFalse();
+
+    // Test combinations
+    assertThat(authService.isAccessAllowed("document",
+        actionSet("document:metadata:read", "workflow:approve"), eac)).isTrue();
+    assertThat(authService.isAccessAllowed("document",
+        actionSet("document:metadata:read", "read"), eac)).isFalse();
+  }
 }
