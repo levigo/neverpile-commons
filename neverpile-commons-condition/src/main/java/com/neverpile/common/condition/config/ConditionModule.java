@@ -3,6 +3,7 @@ package com.neverpile.common.condition.config;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -52,6 +54,7 @@ import com.neverpile.common.specifier.Specifier;
 @Component
 @Import(CoreConditionRegistry.class)
 public class ConditionModule extends SimpleModule {
+  @Serial
   private static final long serialVersionUID = 1L;
 
   @Autowired(required = false)
@@ -65,10 +68,16 @@ public class ConditionModule extends SimpleModule {
 
     setSerializerModifier(new ConditionSerializerModifier());
     setDeserializerModifier(new ConditionDeserializerModifier());
-    addKeySerializer(Specifier.class, new JsonSerializer<Specifier>() {
+    addKeySerializer(Specifier.class, new JsonSerializer<>() {
       @Override
       public void serialize(final Specifier value, final JsonGenerator gen, final SerializerProvider serializers) throws IOException {
         gen.writeFieldName(value.asString());
+      }
+    });
+    addKeyDeserializer(Specifier.class, new KeyDeserializer() {
+      @Override
+      public Object deserializeKey(String s, DeserializationContext deserializationContext) {
+        return Specifier.from(s);
       }
     });
   }
@@ -77,14 +86,15 @@ public class ConditionModule extends SimpleModule {
   private void init() {
     conditionClassByName = conditionRegistries.stream() //
         .flatMap(r -> r.getConditions().entrySet().stream()) //
-        .collect(toMap(e -> e.getKey(), e -> e.getValue()));
+        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     conditionNameByClass = conditionClassByName.entrySet().stream() //
-        .collect(toMap(e -> e.getValue(), e -> e.getKey())); // invert mapping
+        .collect(toMap(Map.Entry::getValue, Map.Entry::getKey)); // invert mapping
   }
 
   public class ConditionSerializerModifier extends BeanSerializerModifier {
     public class CompositeConditionSerializer extends BeanSerializer {
+      @Serial
       private static final long serialVersionUID = 1L;
 
       public CompositeConditionSerializer(final BeanSerializer serializer) {
@@ -144,6 +154,7 @@ public class ConditionModule extends SimpleModule {
   public class ConditionDeserializerModifier extends BeanDeserializerModifier {
     
     public class CompositeConditionDeserializer extends BeanDeserializer {
+      @Serial
       private static final long serialVersionUID = 1L;
 
       public CompositeConditionDeserializer(final BeanDeserializerBase base) {
@@ -230,7 +241,7 @@ public class ConditionModule extends SimpleModule {
                     break; // end loop
                     
                   case FIELD_NAME:
-                    String conditionName = p.getCurrentName();
+                    String conditionName = p.currentName();
                     
                     // The deserializer for a named condition expects to be located
                     // at the start object token.

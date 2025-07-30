@@ -12,6 +12,6 @@ import com.neverpile.common.specifier.Specifier;
 public class FalseCondition extends AbstractTargetListCondition<FalseCondition> {
   @Override
   protected boolean eval(final Specifier s, final Object value) {
-    return null == value || (value instanceof Boolean ? !((Boolean) value) : !Boolean.valueOf(value.toString().trim()));
+    return null == value || (value instanceof Boolean ? !((Boolean) value) : !Boolean.parseBoolean(value.toString().trim()));
   }
 }
