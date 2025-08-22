@@ -13,5 +13,5 @@ jobs:
     secrets: inherit
     with:
       notifyMattermost: false
-      matrix:  '{"jdk": [17]}'
+      matrix:  '{"jdk": [21]}'
       multiModule: true
