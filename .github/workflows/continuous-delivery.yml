@@ -13,6 +13,7 @@ jobs:
     secrets: inherit
     with:
       multiModule: true
+      jdkVersion: 21
   updateReadme:
     needs: build
     uses: levigo/reusable-workflows-pub/.github/workflows/update-readme-md.yml@latest
