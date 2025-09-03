@@ -7,6 +7,10 @@ on:
     paths-ignore:
       - '**/README.md'
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   call-continuous-integration:
     uses: levigo/reusable-workflows-pub/.github/workflows/continuous-integration.yml@latest

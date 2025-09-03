@@ -7,6 +7,10 @@ on:
     paths-ignore:
       - '**/README.md'
 
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     uses: levigo/reusable-workflows-pub/.github/workflows/continuous-delivery-np.yml@latest
