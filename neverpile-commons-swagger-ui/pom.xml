@@ -9,8 +9,8 @@
   <artifactId>neverpile-commons-swagger-ui</artifactId>
 
   <properties>
-    <swagger.version>2.2.34</swagger.version>
-    <swagger-ui.version>5.26.2</swagger-ui.version>
+    <swagger.version>2.2.40</swagger.version>
+    <swagger-ui.version>5.30.0</swagger-ui.version>
   </properties>
   
   <dependencies>
